@@ -6,6 +6,17 @@ const TRANSLATIONS = {
     htmlLang: "en",
     dir: "ltr",
     nav: { switcher: "Language" },
+    ui: {
+      startReading: "Start Reading",
+      startReadingSub: "Begin with Part 01",
+      partOf: "Part {n} of {total}",
+      previous: "Previous",
+      next: "Next",
+      upNext: "Up Next",
+      backToStart: "Read It Again",
+      backToTop: "Back to Top",
+      finalWord: "Final Part — The System Is Complete"
+    },
     cover: {
       badge: "The Complete Guide",
       number: "50",
@@ -159,6 +170,17 @@ const TRANSLATIONS = {
     htmlLang: "fr",
     dir: "ltr",
     nav: { switcher: "Langue" },
+    ui: {
+      startReading: "Commencer la Lecture",
+      startReadingSub: "Commencez par la Partie 01",
+      partOf: "Partie {n} sur {total}",
+      previous: "Précédent",
+      next: "Suivant",
+      upNext: "À Suivre",
+      backToStart: "Relire Depuis le Début",
+      backToTop: "Retour en Haut",
+      finalWord: "Dernière Partie — Le Système Est Complet"
+    },
     cover: {
       badge: "Le Guide Complet",
       number: "50",
@@ -312,6 +334,17 @@ const TRANSLATIONS = {
     htmlLang: "it",
     dir: "ltr",
     nav: { switcher: "Lingua" },
+    ui: {
+      startReading: "Inizia a Leggere",
+      startReadingSub: "Comincia dalla Parte 01",
+      partOf: "Parte {n} di {total}",
+      previous: "Precedente",
+      next: "Successiva",
+      upNext: "A Seguire",
+      backToStart: "Rileggi Dall'Inizio",
+      backToTop: "Torna Su",
+      finalWord: "Ultima Parte — Il Sistema È Completo"
+    },
     cover: {
       badge: "La Guida Completa",
       number: "50",
@@ -465,6 +498,17 @@ const TRANSLATIONS = {
     htmlLang: "es",
     dir: "ltr",
     nav: { switcher: "Idioma" },
+    ui: {
+      startReading: "Empezar a Leer",
+      startReadingSub: "Comienza por la Parte 01",
+      partOf: "Parte {n} de {total}",
+      previous: "Anterior",
+      next: "Siguiente",
+      upNext: "A Continuación",
+      backToStart: "Leerlo de Nuevo",
+      backToTop: "Volver Arriba",
+      finalWord: "Última Parte — El Sistema Está Completo"
+    },
     cover: {
       badge: "La Guía Completa",
       number: "50",

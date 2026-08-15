@@ -20,6 +20,13 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Capacitor / iOS (native project is committed; build artifacts are not)
+ios/App/Pods/
+ios/App/build/
+ios/App/DerivedData/
+ios/**/*.xcuserstate
+ios/**/xcuserdata/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

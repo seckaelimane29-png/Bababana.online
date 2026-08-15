@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { amIAdmin } from "@/lib/billing.functions";
+import { deleteMyAccount } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/app/profile")({
   head: () => ({ meta: [{ title: "You — Yesal Sa Khel" }, { name: "description", content: "Your reading profile and streak." }] }),
@@ -27,6 +28,8 @@ function ProfileScreen() {
   const sub = useSubscription();
   const checkAdmin = useServerFn(amIAdmin);
   const { data: isAdmin } = useQuery({ queryKey: ["is-admin", user?.id], queryFn: () => checkAdmin(), enabled: !!session });
+  const deleteAccount = useServerFn(deleteMyAccount);
+  const [deleting, setDeleting] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!sub.inGrace) return;
@@ -36,6 +39,20 @@ function ProfileScreen() {
 
   const completeness = [profile.name !== "Friend", !!profile.avatar, !!profile.badge, !!profile.language, !!profile.goalMinutes].filter(Boolean).length;
   const pct = Math.round((completeness / 5) * 100);
+
+  async function handleDeleteAccount() {
+    if (!window.confirm("Delete your account? This permanently removes your profile, streak, and subscription. This can't be undone.")) return;
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      localStorage.removeItem("ysk:profile:v1");
+      await signOut();
+      nav({ to: "/", replace: true });
+    } catch {
+      window.alert("Couldn't delete your account. Please try again or contact yesalsakhel@gmail.com.");
+      setDeleting(false);
+    }
+  }
 
   async function shareCard() {
     const text = `${profile.avatar} ${profile.name} · ${profile.badge} · 🔥 ${profile.streak}-day streak on Yesal Sa Khel — Elevate Your Mind 🌍`;
@@ -174,6 +191,13 @@ function ProfileScreen() {
                 Admin dashboard
               </Link>
             )}
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="mt-2 w-full rounded-full border border-destructive/40 py-3 text-sm text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {deleting ? "Deleting…" : "Delete account"}
+            </button>
           </div>
         ) : (
           <div className="rounded-xl border border-border bg-card p-4">

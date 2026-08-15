@@ -16,7 +16,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LanguageRouteImport } from './routes/language'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppBooksRouteImport } from './routes/app.books'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
@@ -65,9 +67,19 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizRoute = QuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -139,7 +151,9 @@ export interface FileRoutesByFullPath {
   '/language': typeof LanguageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
+  '/terms': typeof TermsRoute
   '/app/books': typeof AppBooksRouteWithChildren
   '/app/profile': typeof AppProfileRoute
   '/app/proverbs': typeof AppProverbsRoute
@@ -160,7 +174,9 @@ export interface FileRoutesByTo {
   '/language': typeof LanguageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
+  '/terms': typeof TermsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/proverbs': typeof AppProverbsRoute
   '/app/quotes': typeof AppQuotesRoute
@@ -182,7 +198,9 @@ export interface FileRoutesById {
   '/language': typeof LanguageRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
+  '/terms': typeof TermsRoute
   '/app/books': typeof AppBooksRouteWithChildren
   '/app/profile': typeof AppProfileRoute
   '/app/proverbs': typeof AppProverbsRoute
@@ -206,7 +224,9 @@ export interface FileRouteTypes {
     | '/language'
     | '/onboarding'
     | '/pricing'
+    | '/privacy'
     | '/quiz'
+    | '/terms'
     | '/app/books'
     | '/app/profile'
     | '/app/proverbs'
@@ -227,7 +247,9 @@ export interface FileRouteTypes {
     | '/language'
     | '/onboarding'
     | '/pricing'
+    | '/privacy'
     | '/quiz'
+    | '/terms'
     | '/app/profile'
     | '/app/proverbs'
     | '/app/quotes'
@@ -248,7 +270,9 @@ export interface FileRouteTypes {
     | '/language'
     | '/onboarding'
     | '/pricing'
+    | '/privacy'
     | '/quiz'
+    | '/terms'
     | '/app/books'
     | '/app/profile'
     | '/app/proverbs'
@@ -271,7 +295,9 @@ export interface RootRouteChildren {
   LanguageRoute: typeof LanguageRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   QuizRoute: typeof QuizRoute
+  TermsRoute: typeof TermsRoute
   PayWaveRoute: typeof PayWaveRoute
   ApiPublicPrewarmRoute: typeof ApiPublicPrewarmRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -328,11 +354,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz': {
       id: '/quiz'
       path: '/quiz'
       fullPath: '/quiz'
       preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -466,7 +506,9 @@ const rootRouteChildren: RootRouteChildren = {
   LanguageRoute: LanguageRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   QuizRoute: QuizRoute,
+  TermsRoute: TermsRoute,
   PayWaveRoute: PayWaveRoute,
   ApiPublicPrewarmRoute: ApiPublicPrewarmRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,

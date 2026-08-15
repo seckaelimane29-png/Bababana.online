@@ -167,8 +167,8 @@ function Landing() {
             <div className="text-sm text-muted-foreground">{t(lang, "lp.pill")}</div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground">{t(lang, "lp.privacy")}</a>
-            <a href="#" className="hover:text-foreground">{t(lang, "lp.terms")}</a>
+            <Link to="/privacy" className="hover:text-foreground">{t(lang, "lp.privacy")}</Link>
+            <Link to="/terms" className="hover:text-foreground">{t(lang, "lp.terms")}</Link>
             <a href="mailto:yesalsakhel@gmail.com" className="hover:text-foreground">yesalsakhel@gmail.com</a>
           </div>
           <div className="flex gap-2">

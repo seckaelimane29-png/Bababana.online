@@ -12,8 +12,8 @@
   --text-soft: #a6a7b3;
   --text-faint: #6f7080;
 
-  --accent: #ff5a1f;       /* primary CTA / energy color */
-  --accent-2: #ffb020;     /* secondary highlight */
+  --accent: #22c55e;       /* primary CTA / energy color */
+  --accent-2: #a3e635;     /* secondary highlight */
   --accent-contrast: #0c0d11;
 
   --cream: #f5f2ea;        /* light sections background */
@@ -112,7 +112,7 @@ img { max-width: 100%; display: block; }
   background: var(--accent);
   color: #fff;
 }
-.btn-primary:hover { background: #e64f16; transform: translateY(-1px); }
+.btn-primary:hover { background: #16a34a; transform: translateY(-1px); }
 
 .btn-lg { font-size: 1.05rem; padding: 1.1rem 2.1rem; }
 
@@ -207,7 +207,7 @@ img { max-width: 100%; display: block; }
   white-space: nowrap;
   transition: background 0.15s ease;
 }
-.nav-cta:hover { background: #e64f16; }
+.nav-cta:hover { background: #16a34a; }
 
 .nav-toggle {
   display: none;
@@ -227,7 +227,7 @@ img { max-width: 100%; display: block; }
 /* ---------- Hero ---------- */
 .hero {
   background:
-    radial-gradient(ellipse 60% 50% at 80% 0%, rgba(255, 90, 31, 0.16), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 0%, rgba(34, 197, 94,0.16), transparent),
     var(--bg);
   padding-top: 2rem;
 }
@@ -676,7 +676,7 @@ img { max-width: 100%; display: block; }
 /* ---------- Final CTA ---------- */
 .cta {
   background:
-    radial-gradient(ellipse 60% 60% at 50% 0%, rgba(255, 90, 31, 0.18), transparent),
+    radial-gradient(ellipse 60% 60% at 50% 0%, rgba(34, 197, 94,0.18), transparent),
     var(--bg-2);
   text-align: center;
 }

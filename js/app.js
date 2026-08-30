@@ -79,4 +79,132 @@
   } else {
     revealTargets.forEach((el) => el.classList.add("in-view"));
   }
+
+  // Intent picker + contact form
+  const intentGrid = document.getElementById("intent-grid");
+  const intentForm = document.getElementById("intent-form");
+
+  if (intentGrid && intentForm) {
+    const INTENTS = {
+      work: {
+        label: "Work With Me",
+        placeholder: "What kind of ongoing work are you thinking about, and what does success look like?",
+        submitText: "Send — Let's Work Together",
+        successTitle: "Got it — let's talk shop.",
+        successText: "I'll reply personally about working together, usually within a day or two."
+      },
+      collab: {
+        label: "Collaborate",
+        placeholder: "What's the collaboration idea? The more specific, the faster I can say yes.",
+        submitText: "Send — Let's Collaborate",
+        successTitle: "Love a good collab.",
+        successText: "I'll get back to you about teaming up, usually within a day or two."
+      },
+      talk: {
+        label: "Just Talk",
+        placeholder: "What's on your mind?",
+        submitText: "Send — Let's Talk",
+        successTitle: "Got it — thanks for reaching out.",
+        successText: "I'll reply personally, usually within a day or two."
+      },
+      hire: {
+        label: "Hire Me",
+        placeholder: "What's the role or project, and what's the timeline?",
+        submitText: "Send — I'm Interested",
+        successTitle: "Got it — thanks.",
+        successText: "I'll follow up about the opportunity, usually within a day or two."
+      },
+      coach: {
+        label: "Coach Me",
+        placeholder: "What are you stuck on right now?",
+        submitText: "Send — Coach Me",
+        successTitle: "Got it — let's fix that.",
+        successText: "I'll reach out about coaching, usually within a day or two."
+      }
+    };
+
+    const intentField = document.getElementById("intent-field");
+    const intentSelected = document.getElementById("intent-selected");
+    const intentSelectedLabel = document.getElementById("intent-selected-label");
+    const intentClear = document.getElementById("intent-clear");
+    const intentMessage = document.getElementById("intent-message");
+    const intentSubmit = document.getElementById("intent-submit");
+    const intentSuccess = document.getElementById("intent-success");
+    const intentError = document.getElementById("intent-error");
+    const defaultPlaceholder = intentMessage ? intentMessage.placeholder : "";
+
+    function setSubmitText(text) {
+      intentSubmit.textContent = text + " ";
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.textContent = "→";
+      intentSubmit.appendChild(arrow);
+    }
+
+    function selectIntent(key) {
+      const card = intentGrid.querySelector('[data-intent="' + key + '"]');
+      const cfg = INTENTS[key];
+      if (!card || !cfg) return;
+
+      intentGrid.querySelectorAll(".intent-card").forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+
+      intentField.value = cfg.label;
+      intentSelectedLabel.textContent = cfg.label;
+      intentSelected.hidden = false;
+      intentMessage.placeholder = cfg.placeholder;
+      setSubmitText(cfg.submitText);
+    }
+
+    function clearIntent() {
+      intentGrid.querySelectorAll(".intent-card").forEach((c) => c.classList.remove("selected"));
+      intentField.value = "";
+      intentSelected.hidden = true;
+      intentMessage.placeholder = defaultPlaceholder;
+      setSubmitText("Send Message");
+    }
+
+    intentGrid.querySelectorAll(".intent-card").forEach((card) => {
+      card.addEventListener("click", () => selectIntent(card.dataset.intent));
+    });
+
+    if (intentClear) intentClear.addEventListener("click", clearIntent);
+
+    intentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (intentError) intentError.hidden = true;
+
+      const selectedCard = intentGrid.querySelector(".intent-card.selected");
+      const cfg = selectedCard ? INTENTS[selectedCard.dataset.intent] : null;
+
+      const originalHTML = intentSubmit.innerHTML;
+      intentSubmit.disabled = true;
+      intentSubmit.textContent = "Sending…";
+
+      try {
+        const res = await fetch(intentForm.action, {
+          method: "POST",
+          body: new FormData(intentForm),
+          headers: { Accept: "application/json" }
+        });
+        if (!res.ok) throw new Error("Form submission failed");
+
+        intentForm.hidden = true;
+        intentGrid.hidden = true;
+        if (intentSuccess) {
+          intentSuccess.hidden = false;
+          const title = document.getElementById("intent-success-title");
+          const text = document.getElementById("intent-success-text");
+          if (cfg) {
+            if (title) title.textContent = cfg.successTitle;
+            if (text) text.textContent = cfg.successText;
+          }
+        }
+      } catch (err) {
+        if (intentError) intentError.hidden = false;
+        intentSubmit.disabled = false;
+        intentSubmit.innerHTML = originalHTML;
+      }
+    });
+  }
 })();

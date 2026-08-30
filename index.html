@@ -26,7 +26,7 @@
       <a href="#community">Community</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="nav-cta" href="#cta">Book a Free Call</a>
+    <a class="nav-cta" href="#cta">Get In Touch</a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -43,7 +43,7 @@
         <h1 class="hero-title">I'm Not An Expert<br>On Anything. I'm An<br><span class="accent">Expert On Execution.</span></h1>
         <p class="hero-subtitle">Self-taught, still learning, never went to school — and hundreds of people with a degree still come to me for one thing: finding the way to actually get it done.</p>
         <div class="hero-actions">
-          <a href="#cta" class="btn btn-primary">Book Your Free Strategy Call <span class="arrow">→</span></a>
+          <a href="#cta" class="btn btn-primary">Get In Touch <span class="arrow">→</span></a>
           <a href="#video" class="btn btn-ghost"><span class="play-dot">▶</span> Watch The Free Training</a>
         </div>
         <div class="hero-proof">
@@ -309,13 +309,75 @@
     </div>
   </section>
 
-  <!-- FINAL CTA -->
+  <!-- FINAL CTA / INTENT PICKER -->
   <section class="cta" id="cta">
-    <div class="section-inner cta-inner">
-      <h2 class="cta-title">Your Next Chapter Starts With One Decision</h2>
-      <p class="cta-subtitle">Book a free 20-minute strategy call and let's map out exactly what's holding you back — and how to fix it.</p>
-      <a href="#" class="btn btn-primary btn-lg">Book Your Free Call <span class="arrow">→</span></a>
-      <p class="cta-note">No pitch. No pressure. Just clarity.</p>
+    <div class="section-inner cta-inner intent-wrap">
+      <h2 class="cta-title">Why Are You Here?</h2>
+      <p class="cta-subtitle">Pick what brought you here — the form below adjusts, and it comes straight to me.</p>
+
+      <div class="intent-grid" id="intent-grid">
+        <button type="button" class="intent-card" data-intent="work" data-label="Work With Me">
+          <span class="intent-icon">🤝</span>
+          <span class="intent-name">Work With Me</span>
+          <span class="intent-desc">Ongoing 1:1 collaboration</span>
+        </button>
+        <button type="button" class="intent-card" data-intent="collab" data-label="Collaborate">
+          <span class="intent-icon">🔗</span>
+          <span class="intent-name">Collaborate</span>
+          <span class="intent-desc">Partner on something</span>
+        </button>
+        <button type="button" class="intent-card" data-intent="talk" data-label="Just Talk">
+          <span class="intent-icon">💬</span>
+          <span class="intent-name">Just Talk</span>
+          <span class="intent-desc">Connect or ask something</span>
+        </button>
+        <button type="button" class="intent-card" data-intent="hire" data-label="Hire Me">
+          <span class="intent-icon">💼</span>
+          <span class="intent-name">Hire Me</span>
+          <span class="intent-desc">A paid project or role</span>
+        </button>
+        <button type="button" class="intent-card" data-intent="coach" data-label="Coach Me">
+          <span class="intent-icon">🎯</span>
+          <span class="intent-name">Coach Me</span>
+          <span class="intent-desc">Coaching or mentorship</span>
+        </button>
+      </div>
+
+      <!--
+        REPLACE THE action URL BELOW WITH YOUR OWN FORM ENDPOINT BEFORE THIS GOES LIVE.
+        Quickest option: create a free form at https://formspree.io (2 minutes, no code),
+        then swap "YOUR_FORM_ID" for the ID it gives you. Until you do, submissions will
+        fail with an error message instead of reaching you.
+      -->
+      <form class="intent-form" id="intent-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <div class="intent-selected" id="intent-selected" hidden>
+          <span>Reaching out about: <strong id="intent-selected-label"></strong></span>
+          <button type="button" id="intent-clear" class="intent-clear" aria-label="Clear selection">✕</button>
+        </div>
+        <input type="hidden" name="intent" id="intent-field" value="">
+        <div class="form-row">
+          <label class="form-field">
+            <span>Name</span>
+            <input type="text" name="name" required placeholder="Your name" autocomplete="name">
+          </label>
+          <label class="form-field">
+            <span>Email</span>
+            <input type="email" name="email" required placeholder="you@email.com" autocomplete="email">
+          </label>
+        </div>
+        <label class="form-field">
+          <span>Message</span>
+          <textarea name="message" id="intent-message" rows="4" required placeholder="Tell me a bit about what you need"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary btn-lg" id="intent-submit">Send Message <span class="arrow">→</span></button>
+        <p class="cta-note" id="intent-form-note">I read every message myself. No auto-replies, no sales team.</p>
+        <p class="intent-error" id="intent-error" hidden>Something went wrong sending that — try again, or email me directly.</p>
+      </form>
+
+      <div class="intent-success" id="intent-success" hidden>
+        <h3 id="intent-success-title">Got it — thanks!</h3>
+        <p id="intent-success-text">I'll get back to you personally, usually within a day or two.</p>
+      </div>
     </div>
   </section>
 

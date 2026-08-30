@@ -59,7 +59,21 @@
 
   // Scroll reveal
   const revealTargets = document.querySelectorAll(
-    ".method-card, .program-card, .testimonial-card, .about-grid, .problem-list, .video-frame"
+    [
+      ".method-card",
+      ".program-card",
+      ".testimonial-card",
+      ".about-grid",
+      ".problem-list",
+      ".video-frame",
+      "#intent-grid .intent-card",
+      ".video-row-scroll .video-row-card",
+      "main > section:not(.hero) .section-inner > .eyebrow",
+      "main > section:not(.hero) .section-inner > .section-title",
+      "main > section:not(.hero) .section-inner > .section-lead",
+      ".cta-title",
+      ".cta-subtitle"
+    ].join(", ")
   );
   revealTargets.forEach((el) => el.classList.add("reveal"));
 
@@ -79,6 +93,55 @@
   } else {
     revealTargets.forEach((el) => el.classList.add("in-view"));
   }
+
+  // Animated count-up stats (e.g. "500+", "4.9★", "100%")
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const counterEls = document.querySelectorAll(".about-stats strong, .stats-grid strong");
+
+  counterEls.forEach((el) => {
+    const raw = el.textContent.trim();
+    const match = raw.match(/^([\d.]+)(.*)$/);
+    if (!match) return;
+
+    const target = parseFloat(match[1]);
+    const decimals = (match[1].split(".")[1] || "").length;
+    const suffix = match[2] || "";
+    const format = (value) => (decimals > 0 ? value.toFixed(decimals) : String(Math.round(value))) + suffix;
+
+    if (prefersReducedMotion) return;
+
+    el.textContent = format(0);
+
+    const run = () => {
+      const duration = 1200;
+      const startTime = performance.now();
+
+      function tick(now) {
+        const progress = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(target * eased);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    };
+
+    if ("IntersectionObserver" in window) {
+      const counterObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              run();
+              counterObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+      counterObserver.observe(el);
+    } else {
+      run();
+    }
+  });
 
   // Intent picker + contact form
   const intentGrid = document.getElementById("intent-grid");

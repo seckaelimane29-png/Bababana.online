@@ -1,0 +1,14 @@
+# Secrets — never commit these
+backend/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.pyc
+backend/waxal.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Node
+frontend/node_modules/
+frontend/dist/

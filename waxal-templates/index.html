@@ -3,88 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waxal — Caption &amp; Overlay Templates</title>
+<title>Waxal — Premium Caption &amp; Overlay Templates</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#17110E; --panel:#211915; --cream:#F5EDE4; --green:#0F8A5F;
     --amber:#E0A32E; --terra:#C2542F; --muted:rgba(245,237,228,.55);
+    --spring:cubic-bezier(.34,1.56,.64,1); --smooth:cubic-bezier(.22,1,.36,1);
+    --tsh:0 1px 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box;margin:0}
   body{background:var(--bg);color:var(--cream);font-family:Archivo,sans-serif;padding:24px 16px 64px}
-  h1{font-family:'Archivo Black';font-size:clamp(22px,5vw,34px);text-transform:uppercase}
+  h1{font-family:'Archivo Black';font-size:clamp(22px,5vw,34px);text-transform:uppercase;letter-spacing:-.02em}
   .sub{font-family:'IBM Plex Mono';color:var(--amber);font-size:12px;letter-spacing:.15em;text-transform:uppercase;margin-top:6px}
   .weave{height:6px;margin:20px 0;background:repeating-linear-gradient(90deg,var(--amber) 0 14px,var(--green) 14px 28px,var(--cream) 28px 34px,var(--terra) 34px 48px)}
-  h2{font-size:18px;margin:28px 0 12px;font-weight:800}
+  h2{font-size:18px;margin:30px 0 4px;font-weight:800}
+  .cat{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
   .card{background:var(--panel);border:1px solid rgba(245,237,228,.12);border-radius:14px;overflow:hidden}
   .card h3{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-top:1px solid rgba(245,237,228,.08)}
   .stage{position:relative;aspect-ratio:9/16;background:
-    radial-gradient(120% 80% at 70% 20%, #3a2a1e 0%, #241a12 55%, #150f0b 100%);
+    radial-gradient(120% 80% at 70% 20%, #4a3524 0%, #241a12 55%, #150f0b 100%);
     container-type:inline-size;overflow:hidden}
   .stage::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");pointer-events:none}
+  .glass{background:rgba(23,17,14,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(245,237,228,.15)}
+  @supports not (backdrop-filter:blur(1px)){.glass{background:rgba(23,17,14,.85)}}
 
-  /* ===== overlay text templates ===== */
-  .t-headline{position:absolute;top:12%;left:0;right:0;text-align:center;font-family:'Archivo Black';text-transform:uppercase;font-size:11cqw;color:var(--cream);animation:rise .7s ease-out both;animation-iteration-count:infinite;animation-duration:3s}
-  @keyframes rise{0%{opacity:0;transform:translateY(14px)}20%,80%{opacity:1;transform:none}100%{opacity:0}}
-  .t-lower3{position:absolute;left:6%;bottom:18%;background:rgba(23,17,14,.85);border-left:4px solid var(--green);padding:8px 12px;animation:slideL 3s ease-out infinite}
-  .t-lower3 .lbl{font-family:'IBM Plex Mono';font-size:5cqw;letter-spacing:.15em;color:var(--amber)}
-  .t-lower3 .name{font-weight:800;font-size:8cqw}
-  @keyframes slideL{0%{opacity:0;transform:translateX(-20px)}15%,85%{opacity:1;transform:none}100%{opacity:0}}
-  .t-quote{position:absolute;top:50%;left:8%;right:8%;transform:translateY(-50%);background:rgba(245,237,228,.92);color:#17110E;border-radius:12px;padding:12cqw 7cqw 7cqw;font-weight:700;font-size:6.5cqw;animation:scaleIn 3s ease infinite}
-  .t-quote::before{content:"\201C";position:absolute;top:1cqw;left:5cqw;font-size:18cqw;color:var(--terra);font-family:'Archivo Black'}
-  @keyframes scaleIn{0%{opacity:0;transform:translateY(-50%) scale(.92)}15%,85%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0}}
-  .t-ticker{position:absolute;left:0;right:0;bottom:0;background:var(--amber);color:#17110E;font-family:'IBM Plex Mono';font-weight:600;font-size:5.5cqw;padding:2cqw 0;white-space:nowrap;overflow:hidden}
+  /* ===== TITLES ===== */
+  .t-headline{position:absolute;top:12%;left:0;right:0;text-align:center;font-family:'Archivo Black';text-transform:uppercase;font-size:11cqw;letter-spacing:-.02em;color:transparent;background:linear-gradient(180deg,#FBF5EA,#EBDCC8);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55)) drop-shadow(0 10px 24px rgba(0,0,0,.35));animation:rise 3s var(--smooth) infinite}
+  @keyframes rise{0%{opacity:0;transform:translateY(16px)}18%,82%{opacity:1;transform:none}100%{opacity:0}}
+  .t-serif{position:absolute;top:42%;left:0;right:0;text-align:center;animation:rise 3.2s var(--smooth) infinite}
+  .t-serif .big{font-family:'Playfair Display',serif;font-size:9cqw;color:var(--cream);text-shadow:var(--tsh)}
+  .t-serif .small{font-family:'IBM Plex Mono';font-size:4cqw;letter-spacing:.35em;text-transform:uppercase;color:var(--muted);margin-top:2cqw}
+  .t-outline{position:absolute;top:14%;left:0;right:0;text-align:center;font-family:'Archivo Black';text-transform:uppercase;font-size:12cqw;color:transparent;-webkit-text-stroke:2px var(--cream);paint-order:stroke;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5));animation:fadeIn 3s var(--smooth) infinite}
+  .t-split{position:absolute;top:46%;left:0;right:0;text-align:center;font-family:'Archivo Black';text-transform:uppercase;font-size:9cqw;letter-spacing:-.02em;text-shadow:var(--tsh)}
+  .t-split .l{color:var(--cream);display:inline-block;animation:inL 3s var(--spring) infinite}
+  .t-split .r{color:var(--amber);display:inline-block;animation:inR 3s var(--spring) infinite}
+  @keyframes inL{0%{opacity:0;transform:translateX(-40cqw)}20%,85%{opacity:1;transform:none}100%{opacity:0}}
+  @keyframes inR{0%{opacity:0;transform:translateX(40cqw)}20%,85%{opacity:1;transform:none}100%{opacity:0}}
+  .t-neon{position:absolute;top:44%;left:0;right:0;text-align:center;font-family:Caveat,cursive;font-size:13cqw;color:#9DEFF5;text-shadow:0 0 6px rgba(88,232,255,.9),0 0 22px rgba(50,200,255,.6),0 2px 4px rgba(0,0,0,.6);animation:flick 3s steps(1) infinite}
+  @keyframes flick{0%,4%{opacity:0}5%{opacity:1}7%{opacity:.3}9%,88%{opacity:1}100%{opacity:0}}
+
+  /* ===== SOCIAL ===== */
+  .t-lower3{position:absolute;left:6%;bottom:18%;border-left:4px solid var(--green);border-radius:0 10px 10px 0;padding:2.5cqw 4cqw;animation:slideL 3s var(--smooth) infinite}
+  .t-lower3 .lbl{font-family:'IBM Plex Mono';font-size:4.5cqw;letter-spacing:.15em;color:var(--amber)}
+  .t-lower3 .name{font-weight:800;font-size:7.5cqw;text-shadow:var(--tsh)}
+  @keyframes slideL{0%{opacity:0;transform:translateX(-22px)}15%,85%{opacity:1;transform:none}100%{opacity:0}}
+  .t-quote{position:absolute;top:50%;left:8%;right:8%;transform:translateY(-50%);background:rgba(245,237,228,.82);backdrop-filter:blur(12px);color:#17110E;border-radius:14px;padding:12cqw 7cqw 7cqw;font-weight:700;font-size:6.5cqw;box-shadow:0 12px 34px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.5);animation:scaleIn 3s var(--spring) infinite}
+  .t-quote::before{content:"\201C";position:absolute;top:0;left:5cqw;font-size:18cqw;color:var(--terra);font-family:'Archivo Black'}
+  @keyframes scaleIn{0%{opacity:0;transform:translateY(-50%) scale(.9)}18%,85%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0}}
+  .t-bubble{position:absolute;left:12%;bottom:26%;background:rgba(194,84,47,.75);backdrop-filter:blur(10px);border-radius:999px;padding:3.5cqw 6cqw;font-weight:800;font-size:6cqw;box-shadow:0 10px 26px rgba(0,0,0,.4),inset 0 0 0 1px rgba(245,237,228,.25);animation:bounceIn 3s var(--spring) infinite}
+  .t-bubble::after{content:"";position:absolute;left:6cqw;bottom:-2.5cqw;border:3cqw solid transparent;border-top-color:rgba(194,84,47,.75);border-bottom:0}
+  @keyframes bounceIn{0%{opacity:0;transform:translateY(10cqw) scale(.7)}20%,85%{opacity:1;transform:none}100%{opacity:0}}
+  .t-sticker{position:absolute;top:44%;left:0;right:0;text-align:center}
+  .t-sticker span{display:inline-block;background:var(--amber);color:#17110E;font-weight:800;font-size:7cqw;padding:3cqw 6cqw;border-radius:10px;border:3px solid #fff;transform:rotate(-4deg);box-shadow:0 10px 24px rgba(0,0,0,.45);animation:pop 3s var(--spring) infinite}
+  @keyframes pop{0%{opacity:0;transform:rotate(-4deg) scale(.4)}18%{transform:rotate(-4deg) scale(1.12)}26%,85%{opacity:1;transform:rotate(-4deg) scale(1)}100%{opacity:0}}
+  .t-location{position:absolute;top:7%;left:6%;display:flex;align-items:center;gap:2cqw;border-radius:999px;padding:2.5cqw 4.5cqw;font-family:'IBM Plex Mono';font-size:4.5cqw;animation:drop 3s var(--smooth) infinite}
+  @keyframes drop{0%{opacity:0;transform:translateY(-14px)}15%,85%{opacity:1;transform:none}100%{opacity:0}}
+  .t-hashtags{position:absolute;right:5%;bottom:8%;display:flex;gap:2cqw;font-family:'IBM Plex Mono';font-size:4cqw}
+  .t-hashtags span{border-radius:999px;padding:2cqw 3.5cqw;animation:fadeIn 3s var(--smooth) infinite}
+  .t-hashtags span:nth-child(2){animation-delay:.15s}
+  @keyframes fadeIn{0%{opacity:0;transform:translateY(6px)}18%,85%{opacity:1;transform:none}100%{opacity:0}}
+
+  /* ===== DYNAMIC ===== */
+  .t-kinetic{position:absolute;top:50%;left:0;right:0;text-align:center;transform:translateY(-50%);font-family:'Archivo Black';font-size:19cqw;letter-spacing:-.02em;color:var(--amber);text-transform:uppercase;text-shadow:var(--tsh);animation:kpop 1.4s var(--spring) infinite}
+  @keyframes kpop{0%{transform:translateY(-50%) scale(.6);opacity:0}30%{transform:translateY(-50%) scale(1.15);opacity:1}45%,80%{transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1)}}
+  .t-ticker{position:absolute;left:0;right:0;bottom:0;background:var(--amber);color:#17110E;font-family:'IBM Plex Mono';font-weight:600;font-size:5.5cqw;padding:2cqw 0;white-space:nowrap;overflow:hidden;box-shadow:0 -6px 18px rgba(0,0,0,.35)}
   .t-ticker span{display:inline-block;animation:marquee 6s linear infinite}
   @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  .t-kinetic{position:absolute;top:50%;left:0;right:0;text-align:center;transform:translateY(-50%);font-family:'Archivo Black';font-size:20cqw;color:var(--amber);text-transform:uppercase;animation:pop 1.4s cubic-bezier(.34,1.56,.64,1) infinite}
-  @keyframes pop{0%{transform:translateY(-50%) scale(.6);opacity:0}30%{transform:translateY(-50%) scale(1.15);opacity:1}45%,80%{transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1)}}
-  .t-woven{position:absolute;left:0;right:0;bottom:28%;background:var(--terra);text-align:center;font-weight:800;font-size:7cqw;padding:4cqw 2cqw;border-top:5px solid;border-bottom:5px solid;border-image:repeating-linear-gradient(90deg,var(--amber) 0 10px,var(--green) 10px 20px,var(--cream) 20px 25px) 5;animation:fadeIn 3s ease infinite}
-  @keyframes fadeIn{0%{opacity:0}15%,85%{opacity:1}100%{opacity:0}}
+  .t-type{position:absolute;top:46%;left:8%;right:8%;font-family:'IBM Plex Mono';font-size:6cqw;color:var(--cream);text-shadow:var(--tsh);white-space:nowrap;overflow:hidden;border-right:.8cqw solid var(--amber);width:0;animation:type 3s steps(16) infinite}
+  @keyframes type{0%{width:0}60%,95%{width:88%}100%{width:88%;opacity:0}}
+  .t-bignum{position:absolute;top:40%;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:3cqw;animation:scaleUp 3s var(--spring) infinite}
+  .t-bignum .n{font-family:'Archivo Black';font-size:26cqw;color:var(--amber);text-shadow:var(--tsh)}
+  .t-bignum .w{font-weight:800;font-size:6.5cqw;color:var(--cream);text-shadow:var(--tsh);max-width:34cqw;line-height:1.15}
+  @keyframes scaleUp{0%{opacity:0;transform:scale(.6)}20%,85%{opacity:1;transform:scale(1)}100%{opacity:0}}
+  .t-woven{position:absolute;left:0;right:0;bottom:28%;background:linear-gradient(180deg,#CE5D36,#B54A28);text-align:center;font-weight:800;font-size:7cqw;padding:4cqw 2cqw;border-top:5px solid;border-bottom:5px solid;border-image:repeating-linear-gradient(90deg,var(--amber) 0 10px,var(--green) 10px 20px,var(--cream) 20px 25px) 5;box-shadow:0 10px 26px rgba(0,0,0,.4);text-shadow:var(--tsh);animation:fadeIn 3s var(--smooth) infinite}
 
-  /* ===== caption styles ===== */
+  /* ===== captions ===== */
   .cap{position:absolute;left:6%;right:6%;bottom:16%;text-align:center;font-size:7cqw;font-weight:700}
-  .c-box span{background:rgba(23,17,14,.85);border-radius:8px;padding:2cqw 4cqw;display:inline-block}
-  .c-box .gloss{display:block;background:none;font-size:.72em;color:var(--muted);font-weight:400;margin-top:1.5cqw}
-  .c-plain{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.85)}
-  .c-karaoke{font-weight:800}
+  .c-box span{border-radius:10px;padding:2cqw 4cqw;display:inline-block}
+  .c-box .gloss{display:block;background:none;box-shadow:none;backdrop-filter:none;font-size:.72em;color:var(--muted);font-weight:400;margin-top:1.5cqw}
+  .c-plain{color:#fff;text-shadow:var(--tsh)}
+  .c-karaoke{font-weight:800;text-shadow:var(--tsh)}
   .c-karaoke i{font-style:normal;color:rgba(245,237,228,.5);animation:kfill 2.4s steps(1) infinite}
   .c-karaoke i:nth-child(1){animation-delay:0s}.c-karaoke i:nth-child(2){animation-delay:.6s}
   .c-karaoke i:nth-child(3){animation-delay:1.2s}.c-karaoke i:nth-child(4){animation-delay:1.8s}
   @keyframes kfill{0%{color:rgba(245,237,228,.5)}25%,95%{color:var(--amber)}100%{color:rgba(245,237,228,.5)}}
   .c-outline{font-family:'Archivo Black';text-transform:uppercase;color:var(--cream);-webkit-text-stroke:5px #17110E;paint-order:stroke fill;font-size:8cqw}
-  .c-gold{color:var(--amber);font-weight:800;text-shadow:0 0 18px rgba(224,163,46,.55)}
+  .c-gold{color:var(--amber);font-weight:800;text-shadow:0 0 18px rgba(224,163,46,.55),0 2px 4px rgba(0,0,0,.5)}
   .c-stack{text-align:left;font-size:6.2cqw}
-  .c-stack span{display:inline-block;background:rgba(23,17,14,.75);border-left:4px solid var(--green);padding:2cqw 3cqw;line-height:1.35}
+  .c-stack span{display:inline-block;border-left:4px solid var(--green);border-radius:0 10px 10px 0;padding:2cqw 3cqw;line-height:1.35}
   footer{margin-top:40px;font-family:'IBM Plex Mono';font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
   <h1>Waxal templates</h1>
-  <p class="sub">Overlay text · Caption styles · 9:16 preview</p>
+  <p class="sub">Premium overlay text · Caption styles · 9:16</p>
   <div class="weave"></div>
 
   <h2>Overlay text templates</h2>
+
+  <p class="cat">✍️ Titles</p>
   <div class="grid">
     <div class="card"><div class="stage"><div class="t-headline">Teranga</div></div><h3>Bold headline</h3></div>
-    <div class="card"><div class="stage"><div class="t-lower3"><div class="lbl">DAKAR · SÉNÉGAL</div><div class="name">Aminata Diallo</div></div></div><h3>Lower third</h3></div>
+    <div class="card"><div class="stage"><div class="t-serif"><div class="big">Taariix</div><div class="small">Dakar · 2026</div></div></div><h3>Serif classic</h3></div>
+    <div class="card"><div class="stage"><div class="t-outline">Waxal</div></div><h3>Outline</h3></div>
+    <div class="card"><div class="stage"><div class="t-split"><span class="l">Benn&nbsp;</span><span class="r">réew</span></div></div><h3>Split color</h3></div>
+    <div class="card"><div class="stage"><div class="t-neon">Jàmm rek</div></div><h3>Neon sign</h3></div>
+  </div>
+
+  <p class="cat">💬 Social</p>
+  <div class="grid">
+    <div class="card"><div class="stage"><div class="t-lower3 glass"><div class="lbl">MARSE SANDAGA</div><div class="name">Aminata Faal</div></div></div><h3>Lower third</h3></div>
     <div class="card"><div class="stage"><div class="t-quote">Ndank ndank mooy jàpp golo ci ñaay.</div></div><h3>Quote card</h3></div>
-    <div class="card"><div class="stage"><div class="t-ticker"><span>WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · </span></div></div><h3>Ticker</h3></div>
+    <div class="card"><div class="stage"><div class="t-bubble">Waaw waaw! 😂</div></div><h3>Speech bubble</h3></div>
+    <div class="card"><div class="stage"><div class="t-sticker"><span>SAF NA!</span></div></div><h3>Sticker</h3></div>
+    <div class="card"><div class="stage"><div class="t-location glass">📍 Dakar, Sénégal</div></div><h3>Location tag</h3></div>
+    <div class="card"><div class="stage"><div class="t-hashtags"><span class="glass">#Waxal</span><span class="glass">#Dakar</span></div></div><h3>Hashtag rail</h3></div>
+  </div>
+
+  <p class="cat">🎞 Dynamic</p>
+  <div class="grid">
     <div class="card"><div class="stage"><div class="t-kinetic">Xumb!</div></div><h3>Kinetic word</h3></div>
+    <div class="card"><div class="stage"><div class="t-ticker"><span>WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · </span></div></div><h3>Ticker</h3></div>
+    <div class="card"><div class="stage"><div class="t-type">Dalal ak jàmm…</div></div><h3>Typewriter</h3></div>
+    <div class="card"><div class="stage"><div class="t-bignum"><span class="n">3</span><span class="w">pexe yu am solo</span></div></div><h3>Big number</h3></div>
     <div class="card"><div class="stage"><div class="t-woven">Benn réew, benn taariix</div></div><h3>Woven banner</h3></div>
   </div>
 
-  <h2>Caption style templates</h2>
+  <h2 style="margin-top:36px">Caption style templates</h2>
   <div class="grid">
-    <div class="card"><div class="stage"><div class="cap c-box"><span>Dama bëgg wax ak yow<em class="gloss">Je veux te parler</em></span></div></div><h3>Box</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-box"><span class="glass">Dama bëgg wax ak yow<em class="gloss">Je veux te parler</em></span></div></div><h3>Box</h3></div>
     <div class="card"><div class="stage"><div class="cap c-plain">Nun ñépp a am solo</div></div><h3>Plain</h3></div>
     <div class="card"><div class="stage"><div class="cap c-karaoke"><i>Waxal</i> <i>léegi</i> <i>dégg</i> <i>naa&nbsp;la</i></div></div><h3>Karaoke</h3></div>
     <div class="card"><div class="stage"><div class="cap c-outline">Teranga rek!</div></div><h3>Outline</h3></div>
     <div class="card"><div class="stage"><div class="cap c-gold">Jërëjëf ci topp bi</div></div><h3>Gold</h3></div>
-    <div class="card"><div class="stage"><div class="cap c-stack"><span>Léegi ñu dem ci marse bi,<br>seet njëg yi</span></div></div><h3>Stack</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-stack"><span class="glass">Léegi ñu dem ci marse bi,<br>seet njëg yi</span></div></div><h3>Stack</h3></div>
   </div>
 
-  <footer>WAXAL — template pack · definitions in templates.json · AI prompt in AI-CAPTIONS.md</footer>
+  <footer>WAXAL — premium template pack · definitions in templates.json · AI prompt in AI-CAPTIONS.md</footer>
 </body>
 </html>

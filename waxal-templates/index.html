@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waxal — Caption &amp; Overlay Templates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#17110E; --panel:#211915; --cream:#F5EDE4; --green:#0F8A5F;
+    --amber:#E0A32E; --terra:#C2542F; --muted:rgba(245,237,228,.55);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--cream);font-family:Archivo,sans-serif;padding:24px 16px 64px}
+  h1{font-family:'Archivo Black';font-size:clamp(22px,5vw,34px);text-transform:uppercase}
+  .sub{font-family:'IBM Plex Mono';color:var(--amber);font-size:12px;letter-spacing:.15em;text-transform:uppercase;margin-top:6px}
+  .weave{height:6px;margin:20px 0;background:repeating-linear-gradient(90deg,var(--amber) 0 14px,var(--green) 14px 28px,var(--cream) 28px 34px,var(--terra) 34px 48px)}
+  h2{font-size:18px;margin:28px 0 12px;font-weight:800}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid rgba(245,237,228,.12);border-radius:14px;overflow:hidden}
+  .card h3{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-top:1px solid rgba(245,237,228,.08)}
+  .stage{position:relative;aspect-ratio:9/16;background:
+    radial-gradient(120% 80% at 70% 20%, #3a2a1e 0%, #241a12 55%, #150f0b 100%);
+    container-type:inline-size;overflow:hidden}
+  .stage::after{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");pointer-events:none}
+
+  /* ===== overlay text templates ===== */
+  .t-headline{position:absolute;top:12%;left:0;right:0;text-align:center;font-family:'Archivo Black';text-transform:uppercase;font-size:11cqw;color:var(--cream);animation:rise .7s ease-out both;animation-iteration-count:infinite;animation-duration:3s}
+  @keyframes rise{0%{opacity:0;transform:translateY(14px)}20%,80%{opacity:1;transform:none}100%{opacity:0}}
+  .t-lower3{position:absolute;left:6%;bottom:18%;background:rgba(23,17,14,.85);border-left:4px solid var(--green);padding:8px 12px;animation:slideL 3s ease-out infinite}
+  .t-lower3 .lbl{font-family:'IBM Plex Mono';font-size:5cqw;letter-spacing:.15em;color:var(--amber)}
+  .t-lower3 .name{font-weight:800;font-size:8cqw}
+  @keyframes slideL{0%{opacity:0;transform:translateX(-20px)}15%,85%{opacity:1;transform:none}100%{opacity:0}}
+  .t-quote{position:absolute;top:50%;left:8%;right:8%;transform:translateY(-50%);background:rgba(245,237,228,.92);color:#17110E;border-radius:12px;padding:12cqw 7cqw 7cqw;font-weight:700;font-size:6.5cqw;animation:scaleIn 3s ease infinite}
+  .t-quote::before{content:"\201C";position:absolute;top:1cqw;left:5cqw;font-size:18cqw;color:var(--terra);font-family:'Archivo Black'}
+  @keyframes scaleIn{0%{opacity:0;transform:translateY(-50%) scale(.92)}15%,85%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0}}
+  .t-ticker{position:absolute;left:0;right:0;bottom:0;background:var(--amber);color:#17110E;font-family:'IBM Plex Mono';font-weight:600;font-size:5.5cqw;padding:2cqw 0;white-space:nowrap;overflow:hidden}
+  .t-ticker span{display:inline-block;animation:marquee 6s linear infinite}
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .t-kinetic{position:absolute;top:50%;left:0;right:0;text-align:center;transform:translateY(-50%);font-family:'Archivo Black';font-size:20cqw;color:var(--amber);text-transform:uppercase;animation:pop 1.4s cubic-bezier(.34,1.56,.64,1) infinite}
+  @keyframes pop{0%{transform:translateY(-50%) scale(.6);opacity:0}30%{transform:translateY(-50%) scale(1.15);opacity:1}45%,80%{transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1)}}
+  .t-woven{position:absolute;left:0;right:0;bottom:28%;background:var(--terra);text-align:center;font-weight:800;font-size:7cqw;padding:4cqw 2cqw;border-top:5px solid;border-bottom:5px solid;border-image:repeating-linear-gradient(90deg,var(--amber) 0 10px,var(--green) 10px 20px,var(--cream) 20px 25px) 5;animation:fadeIn 3s ease infinite}
+  @keyframes fadeIn{0%{opacity:0}15%,85%{opacity:1}100%{opacity:0}}
+
+  /* ===== caption styles ===== */
+  .cap{position:absolute;left:6%;right:6%;bottom:16%;text-align:center;font-size:7cqw;font-weight:700}
+  .c-box span{background:rgba(23,17,14,.85);border-radius:8px;padding:2cqw 4cqw;display:inline-block}
+  .c-box .gloss{display:block;background:none;font-size:.72em;color:var(--muted);font-weight:400;margin-top:1.5cqw}
+  .c-plain{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.85)}
+  .c-karaoke{font-weight:800}
+  .c-karaoke i{font-style:normal;color:rgba(245,237,228,.5);animation:kfill 2.4s steps(1) infinite}
+  .c-karaoke i:nth-child(1){animation-delay:0s}.c-karaoke i:nth-child(2){animation-delay:.6s}
+  .c-karaoke i:nth-child(3){animation-delay:1.2s}.c-karaoke i:nth-child(4){animation-delay:1.8s}
+  @keyframes kfill{0%{color:rgba(245,237,228,.5)}25%,95%{color:var(--amber)}100%{color:rgba(245,237,228,.5)}}
+  .c-outline{font-family:'Archivo Black';text-transform:uppercase;color:var(--cream);-webkit-text-stroke:5px #17110E;paint-order:stroke fill;font-size:8cqw}
+  .c-gold{color:var(--amber);font-weight:800;text-shadow:0 0 18px rgba(224,163,46,.55)}
+  .c-stack{text-align:left;font-size:6.2cqw}
+  .c-stack span{display:inline-block;background:rgba(23,17,14,.75);border-left:4px solid var(--green);padding:2cqw 3cqw;line-height:1.35}
+  footer{margin-top:40px;font-family:'IBM Plex Mono';font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <h1>Waxal templates</h1>
+  <p class="sub">Overlay text · Caption styles · 9:16 preview</p>
+  <div class="weave"></div>
+
+  <h2>Overlay text templates</h2>
+  <div class="grid">
+    <div class="card"><div class="stage"><div class="t-headline">Teranga</div></div><h3>Bold headline</h3></div>
+    <div class="card"><div class="stage"><div class="t-lower3"><div class="lbl">DAKAR · SÉNÉGAL</div><div class="name">Aminata Diallo</div></div></div><h3>Lower third</h3></div>
+    <div class="card"><div class="stage"><div class="t-quote">Ndank ndank mooy jàpp golo ci ñaay.</div></div><h3>Quote card</h3></div>
+    <div class="card"><div class="stage"><div class="t-ticker"><span>WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · WAXAL · SA HISTOIRE · SA LÀKK · SA WIDEWO · </span></div></div><h3>Ticker</h3></div>
+    <div class="card"><div class="stage"><div class="t-kinetic">Xumb!</div></div><h3>Kinetic word</h3></div>
+    <div class="card"><div class="stage"><div class="t-woven">Benn réew, benn taariix</div></div><h3>Woven banner</h3></div>
+  </div>
+
+  <h2>Caption style templates</h2>
+  <div class="grid">
+    <div class="card"><div class="stage"><div class="cap c-box"><span>Dama bëgg wax ak yow<em class="gloss">Je veux te parler</em></span></div></div><h3>Box</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-plain">Nun ñépp a am solo</div></div><h3>Plain</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-karaoke"><i>Waxal</i> <i>léegi</i> <i>dégg</i> <i>naa&nbsp;la</i></div></div><h3>Karaoke</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-outline">Teranga rek!</div></div><h3>Outline</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-gold">Jërëjëf ci topp bi</div></div><h3>Gold</h3></div>
+    <div class="card"><div class="stage"><div class="cap c-stack"><span>Léegi ñu dem ci marse bi,<br>seet njëg yi</span></div></div><h3>Stack</h3></div>
+  </div>
+
+  <footer>WAXAL — template pack · definitions in templates.json · AI prompt in AI-CAPTIONS.md</footer>
+</body>
+</html>

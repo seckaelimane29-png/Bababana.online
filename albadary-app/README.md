@@ -24,5 +24,14 @@ Design language: dark olive background with gold accents, Outfit for UI text and
 - `index.html` — self-contained build of the design canvas. All assets (fonts, React, runtime) are embedded, so it opens directly in any browser, online or offline.
 - `design/Quran Learning App.dc.html` — the editable design source (Claude Design canvas format).
 - `design/support.js` — the canvas runtime the design source loads.
+- `js/albadary-api.js` — browser client for the live backend (auth, progress, plans, sessions, teacher/parent links).
+- `backend/` — the Supabase backend: data model and access-rule docs, plus the SQL migrations applied to the live project. See `backend/README.md`.
 
 To view the mockup, just open `index.html` in a browser.
+
+## Backend
+
+The app has a live backend on Supabase (auth + Postgres with row-level
+security + REST API). See [`backend/README.md`](backend/README.md) for the
+data model, access rules, and API details, and use `js/albadary-api.js`
+from app code.

@@ -38,3 +38,16 @@ Private by default and never searchable. Roles are written in plain words: **Vie
 - **Colour:** cream `#F6F0E5`, paper `#FCF9F3`, charcoal `#26221D`, secondary ink `#5C554B`, muted gold `#A5834A`, gold wash `#EEE4CF`. There is a matching dark theme.
 - **Type:** Newsreader for names, headings, quotes and transcripts. Atkinson Hyperlegible (designed for low-vision readers) for controls and labels, at a 17px base.
 - **Accessibility:** tap targets are at least 44px and primary buttons are 56px. Every icon has a text label. A "Larger text" switch scales the whole UI by 16%, and reduced motion is respected.
+
+## Backend
+
+The live backend is a Supabase project with private families, the three roles,
+Keeper-approved invitations, private media storage, and two AI edge functions:
+`organize-story` transcribes and files spoken stories, and `ask-archive`
+answers questions from the archive with sources.
+
+- `js/family-api.js`: the browser client, with one call for each action in the prototype
+- `backend/`: migrations, edge functions, the access-rule check, and setup notes
+
+See `backend/README.md` for the data model, access rules, and the two API-key
+secrets that switch the AI features on.

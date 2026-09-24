@@ -545,7 +545,8 @@ footer.foot{padding-block:40px 64px;border-top:1px solid var(--line-2);font-size
 .roles span{font-size:calc(14px*var(--scale));color:var(--ink-2)}
 .invite-card{margin-top:22px;border-radius:24px;border:1.5px dashed var(--gold);padding:22px;text-align:center;background:var(--paper)}
 .invite-card .code{font-family:var(--serif);font-size:calc(32px*var(--scale));letter-spacing:.08em;margin-top:8px}
-.invite-card .link{font-size:calc(14px*var(--scale));color:var(--ink-2);margin-top:6px;word-break:break-all;user-select:all}
+.invite-card .link{font-size:calc(14px*var(--scale));color:var(--ink-2);margin-top:6px}
+.invite-card .code{user-select:all}
 
 /* sheet */
 .scrim{position:absolute;inset:0;background:rgba(20,14,8,.42);z-index:20;animation:fade .2s ease}
@@ -1224,8 +1225,8 @@ function invite(){
   const iv = st.invite;
   if(iv.sent) return `${topbar('Profile')}<span class="eyebrow">Invitation ready</span><h1 class="qh" style="margin-top:6px">Send this to ${iv.name.split(' ')[0]}</h1>
     <p class="muted t-m" style="margin-top:8px">They’ll see that you invited them, and what they will be able to do. A Keeper approves them before they can see anything.</p>
-    <div class="invite-card"><span class="eyebrow">Family code</span><div class="code">SECKA · 7Q4M</div><div class="link">family.bababana.online/join/7Q4M</div>
-      <button class="btn btn-ink" style="margin-top:16px" data-copy="family.bababana.online/join/7Q4M">${ic('copy')}Copy invitation link</button>
+    <div class="invite-card"><span class="eyebrow">Family code</span><div class="code">7Q4M 2XKD</div><div class="link">In the app, they choose “Join a family” and enter this code.</div>
+      <button class="btn btn-ink" style="margin-top:16px" data-copy="You're invited to the Secka Family archive. Open the app, choose Join a family and enter the code 7Q4M 2XKD.">${ic('copy')}Copy invitation</button>
       <p class="faint t-xs" style="margin-top:12px">Works once · expires in 7 days</p></div>
     <button class="btn btn-line btn-wide" style="margin-top:14px" data-ireset>Invite someone else</button>`;
   const roles = [['Viewer','Can look at the tree and listen to stories.'],['Contributor','Can also add stories, photos and memories.'],['Keeper','Can also edit people, approve members and change privacy.']];
@@ -1236,7 +1237,7 @@ function invite(){
   <label class="field"><span>How are they related to you?</span><select id="inv-rel" data-irel>${['Aunt','Uncle','Cousin','Grandparent','Sibling','Other'].map(o=>`<option ${o===iv.rel?'selected':''}>${o}</option>`).join('')}</select></label>
   <div class="field"><span>What can they do?</span><div class="roles">${roles.map(([r,d])=>`<button data-role="${r}" aria-pressed="${iv.role===r}"><span class="rb"></span><span><b>${r}</b><span>${d}</span></span></button>`).join('')}</div></div>
   <button class="btn btn-ink btn-wide" style="margin-top:24px" data-isend>${ic('send')}Create invitation</button>
-  <p class="faint t-s" style="margin-top:12px;text-align:center">Only people with the link and a Keeper’s approval can join.</p>`;
+  <p class="faint t-s" style="margin-top:12px;text-align:center">Only people with the code and a Keeper’s approval can join.</p>`;
 }
 
 function sheet(){
@@ -1347,7 +1348,7 @@ live.addEventListener('click',(e)=>{
   if('isend' in d){ st.invite.sent=true; render(false); return; }
   if('ireset' in d){ st.invite.sent=false; st.invite.name=''; render(false); return; }
   if(d.toast){ toast(d.toast); return; }
-  if(d.copy){ const txt=d.copy; try{ navigator.clipboard.writeText(txt).then(()=>toast('Invitation link copied'),()=>toast('Select the link above to copy it')); }catch(err){ toast('Select the link above to copy it'); } return; }
+  if(d.copy){ const txt=d.copy; try{ navigator.clipboard.writeText(txt).then(()=>toast('Invitation copied'),()=>toast('Select the code above to copy it')); }catch(err){ toast('Select the code above to copy it'); } return; }
 });
 live.addEventListener('submit',(e)=>{ const f=e.target.closest('[data-askform]'); if(!f) return; e.preventDefault(); const v=f.querySelector('input').value.trim(); if(v){ st.ask=v; render(false);} });
 live.addEventListener('input',(e)=>{

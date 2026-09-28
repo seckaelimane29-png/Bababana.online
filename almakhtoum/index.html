@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Almakhtoum — Clothes, Bags &amp; Shoes</title>
+<meta name="description" content="Almakhtoum: fashion sealed with quality. Shop clothes, bags, shoes and accessories in Gambian Dalasi with delivery across The Gambia." />
+<meta name="theme-color" content="#141019" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body class="is-loading">
+
+<!-- Logo symbol, reused everywhere -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9CF8A"/><stop offset=".5" stop-color="#C9A24B"/><stop offset="1" stop-color="#8E6A24"/>
+    </linearGradient>
+    <symbol id="seal" viewBox="-50 -50 100 100">
+      <circle r="42" fill="url(#goldGrad)"/>
+      <circle r="44" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-dasharray="4.6 2.3"/>
+      <circle r="34" fill="none" stroke="#141019" stroke-opacity=".35" stroke-width="1.2"/>
+      <g fill="none" stroke="#141019" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M-17 20 L0 -16 L17 20" stroke-width="6"/>
+        <path d="M-10 7 H10" stroke-width="4"/>
+        <path d="M0 -16 V-20 q0 -7 6 -7 q6 0 6 6 q0 4 -5 5" stroke-width="3"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- Intro loader -->
+<div class="loader" id="loader" aria-hidden="true">
+  <svg class="loader-seal"><use href="#seal"/></svg>
+  <div class="loader-word">ALMAKHTOUM</div>
+</div>
+
+<div class="announce">
+  <div class="announce-track">
+    <span>Free delivery in Greater Banjul on orders over D 5,000</span><span>✦</span>
+    <span>Order on WhatsApp: +220 204 8100</span><span>✦</span>
+    <span>New season kaftans just landed</span><span>✦</span>
+    <span>Free delivery in Greater Banjul on orders over D 5,000</span><span>✦</span>
+    <span>Order on WhatsApp: +220 204 8100</span><span>✦</span>
+    <span>New season kaftans just landed</span><span>✦</span>
+  </div>
+</div>
+
+<header class="header" id="header">
+  <div class="container header-inner">
+    <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
+    <a class="logo" href="#top" aria-label="Almakhtoum home">
+      <svg class="logo-seal"><use href="#seal"/></svg>
+      <span class="logo-text">
+        <span class="logo-word">ALMAKHTOUM</span>
+        <span class="logo-sub">Clothes · Bags · Shoes</span>
+      </span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Categories">
+      <a href="#shop" data-cat="women">Women</a>
+      <a href="#shop" data-cat="men">Men</a>
+      <a href="#shop" data-cat="kids">Kids</a>
+      <a href="#shop" data-cat="bags">Bags</a>
+      <a href="#shop" data-cat="shoes">Shoes</a>
+      <a href="#shop" data-cat="accessories">Accessories</a>
+    </nav>
+    <div class="header-actions">
+      <label class="search" for="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search dresses, bags, heels…" autocomplete="off" />
+      </label>
+      <button class="icon-btn" id="wishBtn" aria-label="Wishlist">
+        <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+        <span class="badge" id="wishCount">0</span>
+      </button>
+      <button class="icon-btn" id="cartBtn" aria-label="Open bag">
+        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span class="badge" id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO with 3D scene -->
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow reveal">New season · 2026 collection</p>
+        <h1 class="hero-title">
+          <span class="line"><span>Style,</span></span>
+          <span class="line"><span><em>sealed</em> with</span></span>
+          <span class="line"><span>quality.</span></span>
+        </h1>
+        <p class="hero-text reveal">Clothes, bags and shoes chosen for The Gambia's sunshine and nights out. Delivered from Banjul to Basse.</p>
+        <div class="hero-cta reveal">
+          <a href="#shop" class="btn btn-gold">Shop the collection
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="#sale" class="btn btn-ghost">Flash sale</a>
+        </div>
+        <dl class="hero-stats reveal">
+          <div><dt data-count="1200">0</dt><dd>Styles in stock</dd></div>
+          <div><dt data-count="48">0</dt><dd>Hour delivery</dd></div>
+          <div><dt data-count="15000">0</dt><dd>Happy customers</dd></div>
+        </dl>
+      </div>
+      <div class="hero-stage" id="heroStage">
+        <div class="stage-skeleton" id="stageSkeleton">
+          <div class="sk sk-orb"></div>
+        </div>
+        <canvas id="hero3d" aria-label="3D animation of a handbag, shoe box and gold seal"></canvas>
+        <div class="float-card fc-1">
+          <span class="fc-dot"></span> Gold Seal Tote <b>D 4,600</b>
+        </div>
+        <div class="float-card fc-2">★ 4.9 · 2,300+ reviews</div>
+      </div>
+    </div>
+    <a href="#categories" class="scroll-cue" aria-label="Scroll down"><span></span></a>
+  </section>
+
+  <!-- Brand strip -->
+  <section class="marquee" aria-label="Highlights">
+    <div class="marquee-track">
+      <span>Kaftans</span><i>✦</i><span>Handbags</span><i>✦</i><span>Sneakers</span><i>✦</i><span>Stilettos</span><i>✦</i><span>Grand Boubou</span><i>✦</i><span>Totes</span><i>✦</i>
+      <span>Kaftans</span><i>✦</i><span>Handbags</span><i>✦</i><span>Sneakers</span><i>✦</i><span>Stilettos</span><i>✦</i><span>Grand Boubou</span><i>✦</i><span>Totes</span><i>✦</i>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="section" id="categories">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow">Shop by category</p>
+          <h2>Find your <em>fit</em></h2>
+        </div>
+      </div>
+      <div class="cat-grid" id="catGrid"><!-- rendered by JS (skeletons first) --></div>
+    </div>
+  </section>
+
+  <!-- Flash sale -->
+  <section class="sale" id="sale">
+    <div class="container sale-inner reveal">
+      <div>
+        <p class="eyebrow light">Flash sale · ends soon</p>
+        <h2>Up to <span class="gold-text">30% off</span><br/>bags &amp; shoes</h2>
+        <div class="countdown" id="countdown" aria-live="polite">
+          <div><b data-u="h">00</b><span>Hours</span></div>
+          <div><b data-u="m">00</b><span>Mins</span></div>
+          <div><b data-u="s">00</b><span>Secs</span></div>
+        </div>
+        <a href="#shop" class="btn btn-gold" data-jump-tag="Sale">Shop the sale</a>
+      </div>
+      <div class="sale-art" aria-hidden="true">
+        <div class="sale-ring"></div>
+        <div class="sale-item si-1" id="saleArt1"></div>
+        <div class="sale-item si-2" id="saleArt2"></div>
+        <div class="sale-badge">-30%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shop -->
+  <section class="section" id="shop">
+    <div class="container">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow">The collection</p>
+          <h2>New <em>arrivals</em></h2>
+        </div>
+        <p class="result-count" id="resultCount" aria-live="polite"></p>
+      </div>
+
+      <div class="toolbar">
+        <div class="chips" id="chips" role="tablist" aria-label="Filter by category"></div>
+        <div class="toolbar-right">
+          <label class="price-filter">
+            <span>Max <b id="priceOut">D 7,000</b></span>
+            <input type="range" id="priceRange" min="400" max="7000" step="100" value="7000" />
+          </label>
+          <div class="select">
+            <select id="sort" aria-label="Sort products">
+              <option value="featured">Featured</option>
+              <option value="low">Price: low to high</option>
+              <option value="high">Price: high to low</option>
+              <option value="rating">Top rated</option>
+              <option value="new">Newest</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="grid" aria-live="polite"></div>
+      <div class="empty" id="empty" hidden>
+        <svg class="empty-seal"><use href="#seal"/></svg>
+        <h3>Nothing matches… yet</h3>
+        <p>Try a different category or raise the price limit.</p>
+        <button class="btn btn-dark" id="resetFilters">Reset filters</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values -->
+  <section class="section values">
+    <div class="container value-grid">
+      <div class="value reveal"><div class="v-ico">🚚</div><h3>Nationwide delivery</h3><p>Same day in Greater Banjul. 48 hours to Brikama, Farafenni and Basse.</p></div>
+      <div class="value reveal"><div class="v-ico">📱</div><h3>Mobile money</h3><p>Pay with Wave, Afrimoney or QMoney, or cash when your order arrives.</p></div>
+      <div class="value reveal"><div class="v-ico">↺</div><h3>7-day exchange</h3><p>Wrong size? Swap it within 7 days at no cost.</p></div>
+      <div class="value reveal"><div class="v-ico">✦</div><h3>Sealed quality</h3><p>Every piece is checked by hand and sealed before it ships.</p></div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="newsletter">
+    <div class="container news-inner reveal">
+      <svg class="news-seal"><use href="#seal"/></svg>
+      <h2>Join the <em>inner circle</em></h2>
+      <p>Early access to drops and a <b>D 250</b> welcome voucher.</p>
+      <form class="news-form" id="newsForm">
+        <input type="email" required placeholder="Your email address" aria-label="Email address" />
+        <button class="btn btn-gold" type="submit">Subscribe</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <a class="logo logo-light" href="#top">
+        <svg class="logo-seal"><use href="#seal"/></svg>
+        <span class="logo-text"><span class="logo-word">ALMAKHTOUM</span><span class="logo-sub">المختوم · The Sealed</span></span>
+      </a>
+      <p class="footer-note">Kairaba Avenue, Serrekunda, The Gambia<br/><a class="footer-wa" href="https://wa.me/2202048100" target="_blank" rel="noopener">WhatsApp +220 204 8100</a></p>
+    </div>
+    <div><h4>Shop</h4><a href="#shop" data-cat="women">Women</a><a href="#shop" data-cat="men">Men</a><a href="#shop" data-cat="kids">Kids</a><a href="#shop" data-cat="bags">Bags</a><a href="#shop" data-cat="shoes">Shoes</a></div>
+    <div><h4>Help</h4><a href="#">Delivery</a><a href="#">Returns &amp; exchanges</a><a href="#">Size guide</a><a href="https://wa.me/2202048100" target="_blank" rel="noopener">Contact on WhatsApp</a></div>
+    <div><h4>We accept</h4><div class="pay-list"><span>Wave</span><span>Afrimoney</span><span>QMoney</span><span>Cash</span></div></div>
+  </div>
+  <div class="container footer-bottom">© <span id="year"></span> Almakhtoum. All prices in Gambian Dalasi (GMD).</div>
+</footer>
+
+<!-- Mobile menu -->
+<div class="mobile-nav" id="mobileNav" hidden>
+  <a href="#shop" data-cat="all">All</a>
+  <a href="#shop" data-cat="women">Women</a>
+  <a href="#shop" data-cat="men">Men</a>
+  <a href="#shop" data-cat="kids">Kids</a>
+  <a href="#shop" data-cat="bags">Bags</a>
+  <a href="#shop" data-cat="shoes">Shoes</a>
+  <a href="#shop" data-cat="accessories">Accessories</a>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" hidden></div>
+
+<!-- Cart drawer -->
+<aside class="drawer" id="cart" aria-label="Shopping bag" aria-hidden="true">
+  <div class="drawer-head">
+    <h3>Your bag <span id="cartHeadCount"></span></h3>
+    <button class="icon-btn" data-close aria-label="Close bag"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="ship-meter">
+    <p id="shipText"></p>
+    <div class="meter"><span id="shipBar"></span></div>
+  </div>
+  <div class="drawer-body" id="cartItems"></div>
+  <div class="drawer-foot">
+    <div class="row"><span>Subtotal</span><b id="subtotal">D 0</b></div>
+    <div class="row muted"><span>Delivery</span><span id="delivery">—</span></div>
+    <div class="row total"><span>Total</span><b id="total">D 0</b></div>
+    <button class="btn btn-wa btn-block" id="checkoutBtn"><svg class="wa-ico" viewBox="0 0 24 24"><path d="M12 2.2a9.8 9.8 0 0 0-8.4 14.9L2.2 21.8l4.8-1.3A9.8 9.8 0 1 0 12 2.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.6 7.3c.3-.3.8-.2 1 .1l.9 1.7c.2.3.1.7-.2 1l-.5.5a6.3 6.3 0 0 0 3.6 3.6l.5-.5c.3-.3.7-.4 1-.2l1.7.9c.3.2.4.7.1 1l-.8.8c-.6.6-1.5.8-2.3.4a10.5 10.5 0 0 1-5.4-5.4c-.4-.8-.2-1.7.4-2.3z" fill="currentColor"/></svg> Order on WhatsApp</button>
+  </div>
+</aside>
+
+<!-- Wishlist drawer -->
+<aside class="drawer" id="wish" aria-label="Wishlist" aria-hidden="true">
+  <div class="drawer-head">
+    <h3>Wishlist</h3>
+    <button class="icon-btn" data-close aria-label="Close wishlist"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="wishItems"></div>
+</aside>
+
+<!-- Quick view -->
+<div class="modal" id="quick" role="dialog" aria-modal="true" aria-labelledby="qvName" hidden>
+  <div class="modal-card">
+    <button class="icon-btn modal-close" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="qv-media" id="qvMedia"></div>
+    <div class="qv-info" id="qvInfo"></div>
+  </div>
+</div>
+
+<!-- Checkout -->
+<div class="modal" id="checkout" role="dialog" aria-modal="true" aria-labelledby="coTitle" hidden>
+  <div class="modal-card modal-narrow">
+    <button class="icon-btn modal-close" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <form class="co-form" id="coForm">
+      <h3 id="coTitle">Order on WhatsApp</h3>
+      <p class="co-note">Fill in your details and we'll open WhatsApp with your order ready to send to <b>+220 204 8100</b>.</p>
+      <label>Full name<input required name="name" placeholder="Fatou Jallow" /></label>
+      <label>Phone<input required name="phone" type="tel" placeholder="+220 7xx xxxx" /></label>
+      <label>Delivery area
+        <select name="area" id="coArea">
+          <option value="150">Banjul / Serrekunda / Bakau (D 150)</option>
+          <option value="250">Brikama / Kombo South (D 250)</option>
+          <option value="400">Farafenni / Soma (D 400)</option>
+          <option value="500">Basse / Upper River (D 500)</option>
+        </select>
+      </label>
+      <fieldset class="pay">
+        <legend>How will you pay?</legend>
+        <label><input type="radio" name="pay" value="Wave" checked /><span>Wave</span></label>
+        <label><input type="radio" name="pay" value="Afrimoney" /><span>Afrimoney</span></label>
+        <label><input type="radio" name="pay" value="QMoney" /><span>QMoney</span></label>
+        <label><input type="radio" name="pay" value="Cash" /><span>Cash on delivery</span></label>
+      </fieldset>
+      <div class="row total"><span>To pay</span><b id="coTotal">D 0</b></div>
+      <button class="btn btn-wa btn-block" type="submit">Send order on WhatsApp</button>
+    </form>
+    <div class="co-done" id="coDone" hidden>
+      <svg class="done-seal"><use href="#seal"/></svg>
+      <h3>Almost done!</h3>
+      <p id="coDoneText"></p>
+      <button class="btn btn-dark" data-close>Keep shopping</button>
+    </div>
+  </div>
+</div>
+
+<a class="wa-float" href="https://wa.me/2202048100?text=Hello%20Almakhtoum!%20I%27d%20like%20to%20ask%20about%20an%20item." target="_blank" rel="noopener" aria-label="Chat with Almakhtoum on WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12 2.2a9.8 9.8 0 0 0-8.4 14.9L2.2 21.8l4.8-1.3A9.8 9.8 0 1 0 12 2.2z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.6 7.3c.3-.3.8-.2 1 .1l.9 1.7c.2.3.1.7-.2 1l-.5.5a6.3 6.3 0 0 0 3.6 3.6l.5-.5c.3-.3.7-.4 1-.2l1.7.9c.3.2.4.7.1 1l-.8.8c-.6.6-1.5.8-2.3.4a10.5 10.5 0 0 1-5.4-5.4c-.4-.8-.2-1.7.4-2.3z" fill="currentColor"/></svg>
+  <span class="wa-float-label">Order on WhatsApp</span>
+</a>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+<script type="module" src="js/hero3d.js"></script>
+</body>
+</html>

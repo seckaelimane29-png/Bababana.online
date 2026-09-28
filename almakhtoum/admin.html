@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Almakhtoum Admin</title>
+<meta name="theme-color" content="#141019" />
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/admin.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+</head>
+<body class="admin">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9CF8A"/><stop offset=".5" stop-color="#C9A24B"/><stop offset="1" stop-color="#8E6A24"/>
+    </linearGradient>
+    <symbol id="seal" viewBox="-50 -50 100 100">
+      <circle r="42" fill="url(#goldGrad)"/>
+      <circle r="44" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-dasharray="4.6 2.3"/>
+      <g fill="none" stroke="#141019" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M-17 20 L0 -16 L17 20" stroke-width="6"/>
+        <path d="M-10 7 H10" stroke-width="4"/>
+        <path d="M0 -16 V-20 q0 -7 6 -7 q6 0 6 6 q0 4 -5 5" stroke-width="3"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- Starting up -->
+<div class="a-screen a-center" id="bootScreen">
+  <svg class="a-seal spin"><use href="#seal"/></svg>
+</div>
+
+<!-- Sign in -->
+<main class="a-screen a-center" id="authScreen" hidden>
+  <form class="a-card auth-card" id="authForm" novalidate>
+    <svg class="a-seal"><use href="#seal"/></svg>
+    <h1>Almakhtoum <em>Admin</em></h1>
+    <p class="a-muted" id="authIntro">Log in to manage your products.</p>
+    <div class="seg" role="tablist">
+      <button type="button" class="seg-btn on" data-mode="login" role="tab" aria-selected="true">Log in</button>
+      <button type="button" class="seg-btn" data-mode="signup" role="tab" aria-selected="false">Create account</button>
+    </div>
+    <label class="field">Email
+      <input type="email" name="email" autocomplete="email" required />
+    </label>
+    <label class="field">Password
+      <input type="password" name="password" autocomplete="current-password" minlength="8" required />
+      <small class="a-muted" id="pwHint" hidden>At least 8 characters.</small>
+    </label>
+    <p class="form-msg" id="authMsg" role="alert" hidden></p>
+    <button class="btn btn-gold btn-block" type="submit" id="authSubmit">Log in</button>
+    <button type="button" class="linkish" id="forgotBtn">Forgot password?</button>
+  </form>
+</main>
+
+<!-- Signed in, but not allowed to edit -->
+<main class="a-screen a-center" id="deniedScreen" hidden>
+  <div class="a-card auth-card">
+    <svg class="a-seal"><use href="#seal"/></svg>
+    <h1>No edit access</h1>
+    <p class="a-muted">You're logged in as <b id="deniedEmail"></b>, but this account isn't an Almakhtoum admin.</p>
+    <button class="btn btn-dark btn-block" data-signout>Log out</button>
+  </div>
+</main>
+
+<!-- Dashboard -->
+<div class="a-screen" id="appScreen" hidden>
+  <header class="a-top">
+    <a class="a-brand" href="./" title="View the shop">
+      <svg class="a-seal sm"><use href="#seal"/></svg>
+      <span>Almakhtoum <em>Admin</em></span>
+    </a>
+    <div class="a-top-actions">
+      <a class="btn btn-outline btn-sm" href="./" target="_blank" rel="noopener">View shop</a>
+      <button class="btn btn-outline btn-sm" data-signout>Log out</button>
+    </div>
+  </header>
+
+  <main class="a-main">
+    <div class="a-stats" id="stats"></div>
+
+    <div class="a-toolbar">
+      <label class="a-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search products" />
+      </label>
+      <div class="select"><select id="catFilter" aria-label="Filter by category"></select></div>
+      <button class="btn btn-gold" id="addBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add product
+      </button>
+    </div>
+
+    <div class="a-list" id="list" aria-live="polite"></div>
+    <p class="a-empty" id="listEmpty" hidden>No products match.</p>
+  </main>
+</div>
+
+<!-- Product editor -->
+<div class="modal" id="editor" role="dialog" aria-modal="true" aria-labelledby="edTitle" hidden>
+  <form class="modal-card a-editor" id="edForm" novalidate>
+    <div class="ed-head">
+      <h2 id="edTitle">Edit product</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <div class="ed-body">
+      <div class="ed-photo">
+        <div class="photo-box" id="photoBox">
+          <div class="photo-preview" id="photoPreview"></div>
+          <div class="photo-busy" id="photoBusy" hidden><span class="spinner"></span></div>
+        </div>
+        <div class="photo-actions">
+          <label class="btn btn-dark btn-sm">
+            <svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            <span id="photoBtnText">Add photo</span>
+            <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp,image/*" hidden />
+          </label>
+          <button type="button" class="btn btn-outline btn-sm" id="photoRemove" hidden>Remove photo</button>
+        </div>
+        <p class="a-muted tiny">Portrait photos on a plain background look best. Photos are resized automatically.</p>
+      </div>
+
+      <div class="ed-fields">
+        <label class="field">Product name
+          <input name="name" maxlength="120" required placeholder="e.g. Embroidered Kaftan" />
+        </label>
+        <div class="row2">
+          <label class="field">Category
+            <select name="category" required></select>
+          </label>
+          <label class="field">Label
+            <select name="tag">
+              <option value="">None</option>
+              <option value="New">New</option>
+              <option value="Sale">Sale</option>
+              <option value="Hot">Hot</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label class="field">Price (D)
+            <input name="price" type="number" inputmode="numeric" min="0" step="1" required placeholder="2450" />
+          </label>
+          <label class="field">Old price (D) <span class="a-muted">optional</span>
+            <input name="old_price" type="number" inputmode="numeric" min="1" step="1" placeholder="for sales" />
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Sizes</span>
+          <div class="chips-edit" id="sizeChips"></div>
+          <div class="size-add">
+            <input id="sizeInput" placeholder="Add a size, e.g. M or 42" maxlength="12" />
+            <button type="button" class="btn btn-outline btn-sm" id="sizeAddBtn">Add</button>
+          </div>
+          <div class="presets">
+            <span class="a-muted tiny">Quick fill:</span>
+            <button type="button" class="preset" data-preset="S,M,L,XL,XXL">Clothes</button>
+            <button type="button" class="preset" data-preset="36,37,38,39,40,41,42,43,44,45">Shoes</button>
+            <button type="button" class="preset" data-preset="2Y,4Y,6Y,8Y,10Y,12Y">Kids</button>
+            <button type="button" class="preset" data-preset="One size">One size</button>
+          </div>
+        </div>
+
+        <label class="field">Description <span class="a-muted">optional</span>
+          <textarea name="description" rows="3" maxlength="1000" placeholder="Fabric, fit, care…"></textarea>
+        </label>
+
+        <label class="switch-row">
+          <input type="checkbox" name="visible" checked />
+          <span class="switch"></span>
+          <span>Show in the shop</span>
+        </label>
+
+        <details class="advanced">
+          <summary>More options</summary>
+          <label class="field">Position in the shop <span class="a-muted">lower shows first</span>
+            <input name="sort_order" type="number" inputmode="numeric" step="1" value="0" />
+          </label>
+          <p class="a-muted tiny">Drawing shown when there's no photo:</p>
+          <div class="row3">
+            <label class="field">Style
+              <select name="art_type"></select>
+            </label>
+            <label class="field">Colour
+              <input name="color" type="color" value="#C9A24B" />
+            </label>
+            <label class="field">Detail
+              <input name="color2" type="color" value="#E9CF8A" />
+            </label>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <p class="form-msg" id="edMsg" role="alert" hidden></p>
+    <div class="ed-foot">
+      <button type="button" class="btn btn-danger btn-sm" id="deleteBtn">Delete</button>
+      <span class="grow"></span>
+      <button type="button" class="btn btn-outline" data-close>Cancel</button>
+      <button type="submit" class="btn btn-gold" id="saveBtn">Save</button>
+    </div>
+  </form>
+</div>
+
+<!-- Confirm delete -->
+<div class="modal" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle" hidden>
+  <div class="modal-card modal-narrow">
+    <h3 id="cfTitle">Delete this product?</h3>
+    <p class="a-muted" id="cfText"></p>
+    <div class="ed-foot">
+      <span class="grow"></span>
+      <button class="btn btn-outline" data-close>Keep it</button>
+      <button class="btn btn-danger" id="cfYes">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

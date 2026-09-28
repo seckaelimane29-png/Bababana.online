@@ -180,3 +180,5 @@ export function productMedia(p) {
   const alt = p.name.replace(/"/g, '&quot;');
   return `<img class="photo" src="${p.img}" alt="${alt}" loading="lazy" decoding="async" data-id="${p.id}">`;
 }
+
+export const ART_TYPES = Object.keys(ART);

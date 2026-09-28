@@ -114,7 +114,9 @@ body.is-locked .wa-float { opacity: 0; pointer-events: none; }
 .loader {
   position: fixed; inset: 0; z-index: 200; background: var(--ink); display: grid; place-content: center; justify-items: center; gap: 18px;
   transition: opacity .6s var(--ease), visibility .6s;
+  animation: loaderAway .6s ease 5s forwards; /* failsafe: never cover the page if a script fails */
 }
+@keyframes loaderAway { to { opacity: 0; visibility: hidden; } }
 .loader-seal { width: 84px; height: 84px; animation: sealIn 1.1s var(--ease-spring) both, spin 6s linear infinite 1.1s; }
 .loader-word { font-family: var(--display); color: var(--gold-hi); letter-spacing: .5em; font-size: 1.1rem; padding-left: .5em; animation: fadeUp .8s .3s var(--ease) both; }
 body:not(.is-loading) .loader { opacity: 0; visibility: hidden; }

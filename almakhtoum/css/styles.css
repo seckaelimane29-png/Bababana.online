@@ -333,6 +333,19 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .swatches { display: flex; gap: 6px; margin-top: 10px; }
 .swatches i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--line); }
 
+/* ============ Product photos ============ */
+img.photo {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  background: linear-gradient(100deg, var(--sk-base) 30%, var(--sk-shine) 50%, var(--sk-base) 70%);
+  background-size: 300% 100%; animation: shimmer 1.4s ease-in-out infinite;
+}
+img.photo.loaded { background: none; animation: photoIn .6s var(--ease); }
+@keyframes photoIn { from { opacity: 0; transform: scale(1.04); } }
+.card-media > img.photo { position: absolute; inset: 0; transition: transform .7s var(--ease); }
+.card:hover .card-media > img.photo { transform: scale(1.06); }
+.qv-media img.photo { min-height: 380px; }
+.flyer img.photo { border-radius: 50%; }
+
 /* ============ Skeletons ============ */
 .sk {
   background: linear-gradient(100deg, var(--sk-base) 30%, var(--sk-shine) 50%, var(--sk-base) 70%);

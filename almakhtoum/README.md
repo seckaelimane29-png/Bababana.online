@@ -34,6 +34,8 @@ Every buy button opens WhatsApp to **+220 204 8100** (`WHATSAPP` in `js/app.js`)
 
 ## Editing products
 
-Edit `PRODUCTS` in `js/products.js`. Each item has a `type` (the illustration, e.g. `dress`, `kaftan`, `handbag`, `sneaker`, `heel`) and two colours, `c` and `c2`. To use real photos, replace `productArt(...)` in `cardHTML` with an `<img>`.
+Edit `PRODUCTS` in `js/products.js`. Each item has a `type` (the illustration, e.g. `dress`, `kaftan`, `handbag`, `sneaker`, `heel`) and two colours, `c` and `c2`.
+
+To show a real photo, put it in `images/` and add `img: 'images/your-photo.jpg'` to the product. It then appears on the card, in quick view, in the bag and in the wishlist. See `images/README.md` for photo size tips.
 
 Prices are whole Dalasi and are formatted as `D 2,450` by `formatPrice()`.

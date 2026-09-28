@@ -1,4 +1,4 @@
-import { PRODUCTS, CATEGORIES, formatPrice, productArt } from './products.js';
+import { PRODUCTS, CATEGORIES, formatPrice, productArt, productMedia } from './products.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -118,7 +118,7 @@ function cardHTML(p, i) {
     <div class="card-media" data-quick>
       ${p.tag ? `<span class="tag ${p.tag}">${p.tag === 'Sale' ? '−' + Math.round((1 - p.price / p.old) * 100) + '%' : p.tag}</span>` : ''}
       <button class="wish-toggle ${wished ? 'on' : ''}" data-wish aria-label="${wished ? 'Remove from' : 'Add to'} wishlist" aria-pressed="${wished}">${icons.heart}</button>
-      ${productArt(p.type, p.c, p.c2)}
+      ${productMedia(p)}
       <div class="card-actions">
         <button class="btn btn-wa" data-buy aria-label="Buy ${p.name} on WhatsApp">${icons.wa}<span>Buy</span></button>
         <button class="btn qv" data-add aria-label="Add to bag">${icons.bag}</button>
@@ -198,7 +198,7 @@ function flyToCart(fromEl, p) {
   const to = $('#cartBtn').getBoundingClientRect();
   const f = document.createElement('div');
   f.className = 'flyer';
-  f.innerHTML = productArt(p.type, p.c, p.c2);
+  f.innerHTML = productMedia(p);
   document.body.appendChild(f);
   const sx = from.left + from.width / 2 - 35, sy = from.top + from.height / 2 - 35;
   const ex = to.left + to.width / 2 - 35, ey = to.top + to.height / 2 - 35;
@@ -219,7 +219,7 @@ function renderCart() {
     body.innerHTML = state.cart.map((l, i) => {
       const p = byId[l.id];
       return `<div class="line-item" data-i="${i}" style="animation-delay:${i * 50}ms">
-        <div class="li-thumb">${productArt(p.type, p.c, p.c2)}</div>
+        <div class="li-thumb">${productMedia(p)}</div>
         <div class="li-info">
           <h4>${p.name}</h4><small>Size ${l.size}</small>
           <div class="li-bottom">
@@ -276,7 +276,7 @@ function renderWish() {
     : state.wish.map((id, i) => {
       const p = byId[id];
       return `<div class="line-item" data-id="${id}" style="animation-delay:${i * 50}ms">
-        <div class="li-thumb">${productArt(p.type, p.c, p.c2)}</div>
+        <div class="li-thumb">${productMedia(p)}</div>
         <div class="li-info"><h4>${p.name}</h4><small>${formatPrice(p.price)}</small>
           <div class="li-bottom"><button class="btn btn-wa" style="padding:9px 14px;font-size:.8rem" data-wbuy>${icons.wa} Buy</button><button class="btn btn-dark" style="padding:9px 14px;font-size:.8rem" data-wadd>Add to bag</button><button class="li-remove" data-wremove>Remove</button></div>
         </div></div>`;
@@ -326,7 +326,7 @@ function quickView(id) {
   setTimeout(() => {
     let size = p.sizes[Math.min(1, p.sizes.length - 1)];
     const wished = state.wish.includes(id);
-    $('#qvMedia').innerHTML = productArt(p.type, p.c, p.c2);
+    $('#qvMedia').innerHTML = productMedia(p);
     $('#qvInfo').innerHTML = `
       <span class="card-cat">${CATEGORIES.find(c => c.id === p.cat).label}${p.tag ? ' · ' + p.tag : ''}</span>
       <h2 id="qvName">${p.name}</h2>
@@ -525,8 +525,23 @@ function bind() {
 const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const isInView = el => { const r = el.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; };
 
+/* ---------- Product photos ---------- */
+// Fade photos in once loaded; fall back to the illustration if a file is missing.
+function watchPhotos() {
+  document.addEventListener('load', e => {
+    if (e.target.matches?.('img.photo')) e.target.classList.add('loaded');
+  }, true);
+  document.addEventListener('error', e => {
+    const img = e.target;
+    if (!img.matches?.('img.photo')) return;
+    const p = byId[img.dataset.id];
+    img.outerHTML = productArt(p.type, p.c, p.c2);
+  }, true);
+}
+
 /* ---------- Boot ---------- */
 function boot() {
+  watchPhotos();
   $('#year').textContent = new Date().getFullYear();
   $('#saleArt1').innerHTML = productArt('handbag', '#C8553D', '#E9CF8A', false);
   $('#saleArt2').innerHTML = productArt('heel', '#7A1F3D', '#E9CF8A', false);

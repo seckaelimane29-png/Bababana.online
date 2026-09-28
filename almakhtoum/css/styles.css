@@ -114,7 +114,9 @@ body.is-locked .wa-float { opacity: 0; pointer-events: none; }
 .loader {
   position: fixed; inset: 0; z-index: 200; background: var(--ink); display: grid; place-content: center; justify-items: center; gap: 18px;
   transition: opacity .6s var(--ease), visibility .6s;
+  animation: loaderAway .6s ease 5s forwards; /* failsafe: never cover the page if a script fails */
 }
+@keyframes loaderAway { to { opacity: 0; visibility: hidden; } }
 .loader-seal { width: 84px; height: 84px; animation: sealIn 1.1s var(--ease-spring) both, spin 6s linear infinite 1.1s; }
 .loader-word { font-family: var(--display); color: var(--gold-hi); letter-spacing: .5em; font-size: 1.1rem; padding-left: .5em; animation: fadeUp .8s .3s var(--ease) both; }
 body:not(.is-loading) .loader { opacity: 0; visibility: hidden; }
@@ -330,6 +332,19 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .stars::before { content: '★ '; color: var(--gold); }
 .swatches { display: flex; gap: 6px; margin-top: 10px; }
 .swatches i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--paper); box-shadow: 0 0 0 1px var(--line); }
+
+/* ============ Product photos ============ */
+img.photo {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  background: linear-gradient(100deg, var(--sk-base) 30%, var(--sk-shine) 50%, var(--sk-base) 70%);
+  background-size: 300% 100%; animation: shimmer 1.4s ease-in-out infinite;
+}
+img.photo.loaded { background: none; animation: photoIn .6s var(--ease); }
+@keyframes photoIn { from { opacity: 0; transform: scale(1.04); } }
+.card-media > img.photo { position: absolute; inset: 0; transition: transform .7s var(--ease); }
+.card:hover .card-media > img.photo { transform: scale(1.06); }
+.qv-media img.photo { min-height: 380px; }
+.flyer img.photo { border-radius: 50%; }
 
 /* ============ Skeletons ============ */
 .sk {

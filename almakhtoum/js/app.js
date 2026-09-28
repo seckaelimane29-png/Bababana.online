@@ -1,8 +1,10 @@
-import { PRODUCTS, CATEGORIES, formatPrice, productArt } from './products.js';
+import { CATEGORIES, formatPrice, productArt, productMedia } from './products.js';
+import { loadProducts } from './catalog.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+let PRODUCTS = [];  // filled from the database in boot()
+let byId = {};
 const FREE_SHIP = 5000;
 const WHATSAPP = '2202048100'; // +220 204 8100 — all orders go here
 const waLink = text => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
@@ -20,8 +22,8 @@ const state = {
   query: '',
   maxPrice: 7000,
   sort: 'featured',
-  cart: store.get('cart', []).filter(l => byId[l.id]),
-  wish: store.get('wish', []).filter(id => byId[id]),
+  cart: store.get('cart', []), // pruned of removed products once the catalogue loads
+  wish: store.get('wish', []),
 };
 
 const icons = {
@@ -104,7 +106,6 @@ function filtered() {
   const sorters = {
     low: (a, b) => a.price - b.price,
     high: (a, b) => b.price - a.price,
-    rating: (a, b) => b.rating - a.rating,
     new: (a, b) => (b.tag === 'New') - (a.tag === 'New') || b.id - a.id,
   };
   if (sorters[state.sort]) list = [...list].sort(sorters[state.sort]);
@@ -116,21 +117,21 @@ function cardHTML(p, i) {
   const wished = state.wish.includes(p.id);
   return `<article class="card" style="--i:${i}" data-id="${p.id}">
     <div class="card-media" data-quick>
-      ${p.tag ? `<span class="tag ${p.tag}">${p.tag === 'Sale' ? '−' + Math.round((1 - p.price / p.old) * 100) + '%' : p.tag}</span>` : ''}
+      ${p.tag ? `<span class="tag ${p.tag}">${p.tag === 'Sale' && p.old > p.price ? '−' + Math.round((1 - p.price / p.old) * 100) + '%' : p.tag}</span>` : ''}
       <button class="wish-toggle ${wished ? 'on' : ''}" data-wish aria-label="${wished ? 'Remove from' : 'Add to'} wishlist" aria-pressed="${wished}">${icons.heart}</button>
-      ${productArt(p.type, p.c, p.c2)}
+      ${productMedia(p)}
       <div class="card-actions">
-        <button class="btn btn-wa" data-buy aria-label="Buy ${p.name} on WhatsApp">${icons.wa}<span>Buy</span></button>
+        <button class="btn btn-wa" data-buy aria-label="Buy ${escapeHTML(p.name)} on WhatsApp">${icons.wa}<span>Buy</span></button>
         <button class="btn qv" data-add aria-label="Add to bag">${icons.bag}</button>
         <button class="btn qv" data-quick aria-label="Quick view">${icons.eye}</button>
       </div>
     </div>
     <div class="card-body">
       <div class="card-cat">${catLabel}</div>
-      <h3 class="card-name" data-quick>${p.name}</h3>
+      <h3 class="card-name" data-quick>${escapeHTML(p.name)}</h3>
       <div class="card-meta">
         <span class="price">${formatPrice(p.price)}${p.old ? `<s>${formatPrice(p.old)}</s>` : ''}</span>
-        <span class="stars">${p.rating.toFixed(1)} (${p.reviews})</span>
+        ${p.rating ? `<span class="stars">${p.rating.toFixed(1)} (${p.reviews})</span>` : ''}
       </div>
       <div class="swatches"><i style="background:${p.c}"></i><i style="background:${p.c2}"></i></div>
     </div>
@@ -198,7 +199,7 @@ function flyToCart(fromEl, p) {
   const to = $('#cartBtn').getBoundingClientRect();
   const f = document.createElement('div');
   f.className = 'flyer';
-  f.innerHTML = productArt(p.type, p.c, p.c2);
+  f.innerHTML = productMedia(p);
   document.body.appendChild(f);
   const sx = from.left + from.width / 2 - 35, sy = from.top + from.height / 2 - 35;
   const ex = to.left + to.width / 2 - 35, ey = to.top + to.height / 2 - 35;
@@ -219,9 +220,9 @@ function renderCart() {
     body.innerHTML = state.cart.map((l, i) => {
       const p = byId[l.id];
       return `<div class="line-item" data-i="${i}" style="animation-delay:${i * 50}ms">
-        <div class="li-thumb">${productArt(p.type, p.c, p.c2)}</div>
+        <div class="li-thumb">${productMedia(p)}</div>
         <div class="li-info">
-          <h4>${p.name}</h4><small>Size ${l.size}</small>
+          <h4>${escapeHTML(p.name)}</h4><small>Size ${escapeHTML(l.size)}</small>
           <div class="li-bottom">
             <div class="qty"><button data-dec aria-label="Decrease">−</button><span>${l.qty}</span><button data-inc aria-label="Increase">+</button></div>
             <b>${formatPrice(p.price * l.qty)}</b>
@@ -276,8 +277,8 @@ function renderWish() {
     : state.wish.map((id, i) => {
       const p = byId[id];
       return `<div class="line-item" data-id="${id}" style="animation-delay:${i * 50}ms">
-        <div class="li-thumb">${productArt(p.type, p.c, p.c2)}</div>
-        <div class="li-info"><h4>${p.name}</h4><small>${formatPrice(p.price)}</small>
+        <div class="li-thumb">${productMedia(p)}</div>
+        <div class="li-info"><h4>${escapeHTML(p.name)}</h4><small>${formatPrice(p.price)}</small>
           <div class="li-bottom"><button class="btn btn-wa" style="padding:9px 14px;font-size:.8rem" data-wbuy>${icons.wa} Buy</button><button class="btn btn-dark" style="padding:9px 14px;font-size:.8rem" data-wadd>Add to bag</button><button class="li-remove" data-wremove>Remove</button></div>
         </div></div>`;
     }).join('');
@@ -326,14 +327,14 @@ function quickView(id) {
   setTimeout(() => {
     let size = p.sizes[Math.min(1, p.sizes.length - 1)];
     const wished = state.wish.includes(id);
-    $('#qvMedia').innerHTML = productArt(p.type, p.c, p.c2);
+    $('#qvMedia').innerHTML = productMedia(p);
     $('#qvInfo').innerHTML = `
       <span class="card-cat">${CATEGORIES.find(c => c.id === p.cat).label}${p.tag ? ' · ' + p.tag : ''}</span>
-      <h2 id="qvName">${p.name}</h2>
-      <div class="card-meta" style="justify-content:flex-start;gap:16px"><span class="price">${formatPrice(p.price)}${p.old ? `<s>${formatPrice(p.old)}</s>` : ''}</span><span class="stars">${p.rating.toFixed(1)} · ${p.reviews} reviews</span></div>
-      <p>Handpicked for comfort in the Gambian heat and made to last. Checked, pressed and sealed by the Almakhtoum team before it leaves our Serrekunda studio.</p>
+      <h2 id="qvName">${escapeHTML(p.name)}</h2>
+      <div class="card-meta" style="justify-content:flex-start;gap:16px"><span class="price">${formatPrice(p.price)}${p.old ? `<s>${formatPrice(p.old)}</s>` : ''}</span>${p.rating ? `<span class="stars">${p.rating.toFixed(1)} · ${p.reviews} reviews</span>` : ''}</div>
+      <p class="qv-desc">${p.description ? escapeHTML(p.description) : 'Handpicked for comfort in the Gambian heat and made to last. Checked, pressed and sealed by the Almakhtoum team before it ships.'}</p>
       <div class="opt-label">Size</div>
-      <div class="sizes">${p.sizes.map(s => `<button class="size ${s === size ? 'on' : ''}" data-size="${s}">${s}</button>`).join('')}</div>
+      <div class="sizes">${p.sizes.map(s => `<button class="size ${s === size ? 'on' : ''}" data-size="${escapeHTML(s)}">${escapeHTML(s)}</button>`).join('')}</div>
       <div class="qv-actions">
         <button class="btn btn-wa" id="qvBuy">${icons.wa} Buy on WhatsApp · ${formatPrice(p.price)}</button>
       </div>
@@ -525,22 +526,49 @@ function bind() {
 const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const isInView = el => { const r = el.getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; };
 
+/* ---------- Product photos ---------- */
+// Fade photos in once loaded; fall back to the illustration if a file is missing.
+function watchPhotos() {
+  document.addEventListener('load', e => {
+    if (e.target.matches?.('img.photo')) e.target.classList.add('loaded');
+  }, true);
+  document.addEventListener('error', e => {
+    const img = e.target;
+    if (!img.matches?.('img.photo')) return;
+    const p = byId[img.dataset.id];
+    img.outerHTML = productArt(p.type, p.c, p.c2);
+  }, true);
+}
+
 /* ---------- Boot ---------- */
 function boot() {
+  watchPhotos();
   $('#year').textContent = new Date().getFullYear();
   $('#saleArt1').innerHTML = productArt('handbag', '#C8553D', '#E9CF8A', false);
   $('#saleArt2').innerHTML = productArt('heel', '#7A1F3D', '#E9CF8A', false);
 
-  // Skeletons first, then real content (simulates fetching from a server)
+  // Skeletons while the catalogue loads from the database
   $('#catGrid').innerHTML = Array.from({ length: 6 }, skeletonCat).join('');
-  renderChips();
-  renderGrid(1400);
-  setTimeout(renderCategories, 1100);
+  $('#grid').innerHTML = Array.from({ length: 8 }, skeletonCard).join('');
+  $('#grid').setAttribute('aria-busy', 'true');
+  $('#resultCount').textContent = 'Loading…';
 
   bind();
   updateRange();
-  updateBadges(false);
   startCountdown();
+
+  loadProducts().then(({ products }) => {
+    PRODUCTS = products;
+    byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+    state.cart = state.cart.filter(l => byId[l.id]);
+    state.wish = state.wish.filter(id => byId[id]);
+    store.set('cart', state.cart);
+    store.set('wish', state.wish);
+    renderCategories();
+    renderChips();
+    renderGrid(0);
+    updateBadges(false);
+  });
 
   let booted = false;
   const done = () => {

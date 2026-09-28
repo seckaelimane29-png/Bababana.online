@@ -18,6 +18,9 @@ export const CATEGORIES = [
 ];
 
 // type = illustration, c = main colour, c2 = detail colour
+// img = optional photo, e.g. img: 'images/sanyang-wrap-dress.jpg' (see images/README.md).
+//       When set, the photo replaces the illustration everywhere; if the file is
+//       missing the illustration is shown instead.
 export const PRODUCTS = [
   { id: 1,  name: 'Sanyang Wrap Dress',       cat: 'women', type: 'dress',    c: '#C8553D', c2: '#F4D9B0', price: 2450, old: 3100, rating: 4.8, reviews: 126, tag: 'Sale', sizes: ['S','M','L','XL'] },
   { id: 2,  name: 'Kombo Embroidered Kaftan', cat: 'women', type: 'kaftan',   c: '#1F4E5A', c2: '#C9A24B', price: 3800, rating: 4.9, reviews: 88,  tag: 'New',  sizes: ['M','L','XL'] },
@@ -170,3 +173,12 @@ export function productArt(type, c, c2, bg = true) {
     <g class="art-body">${body}</g>
   </svg>`;
 }
+
+/* Photo when the product has one, illustration otherwise */
+export function productMedia(p) {
+  if (!p.img) return productArt(p.type, p.c, p.c2);
+  const alt = p.name.replace(/"/g, '&quot;');
+  return `<img class="photo" src="${p.img}" alt="${alt}" loading="lazy" decoding="async" data-id="${p.id}">`;
+}
+
+export const ART_TYPES = Object.keys(ART);

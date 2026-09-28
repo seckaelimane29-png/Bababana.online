@@ -3,6 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+  // Relative links (css/styles.css, js/app.js…) only resolve inside this folder
+  // when the address ends with "/". Vercel serves /almakhtoum without adding it,
+  // which would load the parent site's files instead, so add it before anything loads.
+  (function () {
+    var p = location.pathname;
+    if (p.length > 1 && !/(\/|\.html?)$/i.test(p)) {
+      location.replace(p + '/' + location.search + location.hash);
+      document.documentElement.style.visibility = 'hidden'; // no flash of the wrong styles meanwhile
+    }
+  })();
+</script>
+<noscript><style>.loader { display: none !important; }</style></noscript>
 <title>Almakhtoum — Clothes, Bags &amp; Shoes</title>
 <meta name="description" content="Almakhtoum: fashion sealed with quality. Shop clothes, bags, shoes and accessories in Gambian Dalasi with delivery across The Gambia." />
 <meta name="theme-color" content="#141019" />
@@ -199,7 +212,6 @@
               <option value="featured">Featured</option>
               <option value="low">Price: low to high</option>
               <option value="high">Price: high to low</option>
-              <option value="rating">Top rated</option>
               <option value="new">Newest</option>
             </select>
           </div>

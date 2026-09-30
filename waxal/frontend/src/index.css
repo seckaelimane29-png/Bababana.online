@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-[#FAFBFC] font-sans text-[#111827] dark:bg-[#0F0F11] dark:text-[#FAFAFA];
+  }
+  *:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-[20px] border border-[#E5E7EB] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:border-[#3F3F46] dark:bg-[#1A1A1E];
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.04)];
+  }
+  .btn-press {
+    @apply active:scale-[0.97] transition-transform;
+  }
+  .shimmer-bg {
+    background: linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0) 60%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+.stagger-children > * {
+  animation: fadeInUp 0.4s ease-out backwards;
+}
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0s;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

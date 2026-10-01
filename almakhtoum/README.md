@@ -36,13 +36,13 @@ Every buy button opens WhatsApp to **+220 236 4012** (`WHATSAPP` in `js/app.js`)
 
 ## Admin page (add, edit and upload products)
 
-Open **`/admin`** (e.g. `https://sunu-waxal.vercel.app/admin`) and log in. From there you can add products, upload photos from your phone, change prices, sizes, labels and descriptions, hide products or delete them. The shop updates immediately.
+Open **`/admin`** (e.g. `https://waxal-mu.vercel.app/admin`) and log in. From there you can add products, upload photos from your phone, change prices, sizes, labels and descriptions, hide products or delete them. The shop updates immediately.
 
 - **Backend:** Supabase project `almakhtoum` (`js/config.js`). Products live in the `products` table, photos in the public `products` storage bucket. Photos are resized on the device (max 1400 px, JPEG) before upload.
 - **Who can edit:** only signed-in users whose confirmed email is in the `public.admins` table (currently `seckaelimane29@gmail.com`). Everyone else can only read visible products. This is enforced by database row-level security, not by the page.
 - **First login:** tap *Create account* with the admin email, open the confirmation email, then log in.
 - **Add another admin:** in the Supabase SQL editor run `insert into public.admins (email) values ('name@example.com');` (lowercase). Remove with `delete from public.admins where email = '…';`.
-- **Confirmation links:** in Supabase → Authentication → URL Configuration, set the Site URL to `https://sunu-waxal.vercel.app/admin` so email links come back to the admin page.
+- **Confirmation links:** in Supabase → Authentication → URL Configuration, set the Site URL to `https://waxal-mu.vercel.app/admin` so email links come back to the admin page.
 - **If the database is unreachable,** the shop falls back to the built-in sample list in `js/products.js`.
 
 ## Built-in sample products

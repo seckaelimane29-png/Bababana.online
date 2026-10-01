@@ -1,6 +1,6 @@
-# Almakhtoum — Clothes, Bags & Shoes
+# Sunu Waxal — Clothes, Bags & Shoes
 
-A standalone storefront for **Almakhtoum** (المختوم, "the sealed"). It is fully separate from the other projects in this repo: it has its own HTML, CSS, JS and assets, and nothing outside this folder links to it.
+A standalone storefront for **Sunu Waxal**. It lives in the `almakhtoum/` folder (the shop's original working name) and is fully separate from the other projects in this repo: it has its own HTML, CSS, JS and assets, and nothing outside this folder links to it.
 
 ## Run it
 
@@ -24,11 +24,11 @@ python3 -m http.server 8080   # then open http://localhost:8080
 | `js/catalog.js`, `js/config.js` | Loads products from Supabase; backend settings |
 | `admin.html`, `js/admin.js`, `css/admin.css` | Admin page |
 | `js/hero3d.js` | Three.js 3D banner: handbag, shoe box, hanger and gold seal coin |
-| `assets/logo.svg`, `assets/favicon.svg` | Logo: a gold wax seal with an "A" whose peak is a clothes-hanger hook |
+| `assets/logo.svg`, `assets/favicon.svg` | Logo: a gold medallion with an "S" whose top is a clothes-hanger hook |
 
 ## Ordering via WhatsApp
 
-Every buy button opens WhatsApp to **+220 204 8100** (`WHATSAPP` in `js/app.js`) with the order already written:
+Every buy button opens WhatsApp to **+220 236 4012** (`WHATSAPP` in `js/app.js`) with the order already written:
 
 - **Buy** on a product card or in quick view sends that one item, with its size and price.
 - **Order on WhatsApp** in the bag asks for name, phone, delivery area and payment method, then sends the whole order and total.
@@ -36,13 +36,13 @@ Every buy button opens WhatsApp to **+220 204 8100** (`WHATSAPP` in `js/app.js`)
 
 ## Admin page (add, edit and upload products)
 
-Open **`/admin`** (e.g. `https://almakhtoum.vercel.app/admin`) and log in. From there you can add products, upload photos from your phone, change prices, sizes, labels and descriptions, hide products or delete them. The shop updates immediately.
+Open **`/admin`** (e.g. `https://sunu-waxal.vercel.app/admin`) and log in. From there you can add products, upload photos from your phone, change prices, sizes, labels and descriptions, hide products or delete them. The shop updates immediately.
 
 - **Backend:** Supabase project `almakhtoum` (`js/config.js`). Products live in the `products` table, photos in the public `products` storage bucket. Photos are resized on the device (max 1400 px, JPEG) before upload.
 - **Who can edit:** only signed-in users whose confirmed email is in the `public.admins` table (currently `seckaelimane29@gmail.com`). Everyone else can only read visible products. This is enforced by database row-level security, not by the page.
 - **First login:** tap *Create account* with the admin email, open the confirmation email, then log in.
 - **Add another admin:** in the Supabase SQL editor run `insert into public.admins (email) values ('name@example.com');` (lowercase). Remove with `delete from public.admins where email = '…';`.
-- **Confirmation links:** in Supabase → Authentication → URL Configuration, set the Site URL to `https://almakhtoum.vercel.app/admin` so email links come back to the admin page.
+- **Confirmation links:** in Supabase → Authentication → URL Configuration, set the Site URL to `https://sunu-waxal.vercel.app/admin` so email links come back to the admin page.
 - **If the database is unreachable,** the shop falls back to the built-in sample list in `js/products.js`.
 
 ## Built-in sample products

@@ -1,5 +1,5 @@
-/* Almakhtoum — 3D hero banner.
-   A leather handbag, a shoe box, a gold hanger and the Almakhtoum seal
+/* Sunu Waxal — 3D hero banner.
+   A leather handbag, a shoe box, a gold hanger and the Sunu Waxal medallion
    float and turn in a warm studio light. Follows the pointer; pauses offscreen. */
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -242,7 +242,7 @@ function init() {
   } else start();
 }
 
-/* Draws the Almakhtoum seal onto a canvas used as the coin face texture */
+/* Draws the Sunu Waxal medallion onto a canvas used as the coin face texture */
 function drawSeal() {
   const s = 512, c = document.createElement('canvas');
   c.width = c.height = s;
@@ -260,22 +260,22 @@ function drawSeal() {
   // ring text
   g.fillStyle = 'rgba(20,16,25,.75)';
   g.font = '600 30px Georgia, serif';
-  const text = 'ALMAKHTOUM · THE SEALED · ';
+  const text = 'SUNU WAXAL · CLOTHES · BAGS · SHOES · ';
   for (let i = 0; i < text.length; i++) {
     g.save();
     g.rotate((i / text.length) * Math.PI * 2);
     g.fillText(text[i], -9, -190);
     g.restore();
   }
-  // monogram A with hanger hook
+  // monogram S with hanger hook
   g.strokeStyle = '#141019';
   g.lineCap = 'round'; g.lineJoin = 'round';
-  g.lineWidth = 26;
-  g.beginPath(); g.moveTo(-70, 80); g.lineTo(0, -64); g.lineTo(70, 80); g.stroke();
-  g.lineWidth = 16;
-  g.beginPath(); g.moveTo(-40, 28); g.lineTo(40, 28); g.stroke();
+  g.lineWidth = 24;
+  g.beginPath(); g.moveTo(52, -36);
+  g.bezierCurveTo(52, -76, -52, -76, -52, -32); g.bezierCurveTo(-52, 8, 52, 0, 52, 44); g.bezierCurveTo(52, 88, -52, 88, -52, 48);
+  g.stroke();
   g.lineWidth = 12;
-  g.beginPath(); g.moveTo(0, -64); g.lineTo(0, -80);
+  g.beginPath(); g.moveTo(0, -66); g.lineTo(0, -80);
   g.bezierCurveTo(0, -112, 48, -112, 48, -84); g.bezierCurveTo(48, -68, 34, -62, 26, -60); g.stroke();
   return c;
 }

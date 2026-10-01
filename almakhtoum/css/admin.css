@@ -1,4 +1,4 @@
-/* ============ Almakhtoum — admin page ============ */
+/* ============ Sunu Waxal — admin page ============ */
 body.admin { background: var(--cream); min-height: 100vh; }
 body.admin [hidden] { display: none !important; } /* beat .btn / .photo-busy display rules */
 .a-screen[hidden] { display: none !important; }

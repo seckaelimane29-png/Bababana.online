@@ -1,4 +1,4 @@
-/* Almakhtoum — catalogue data and product illustrations.
+/* Sunu Waxal — catalogue data and product illustrations.
    Prices are in Gambian Dalasi (GMD, symbol "D"). */
 
 export const CURRENCY = { code: 'GMD', symbol: 'D', name: 'Dalasi' };

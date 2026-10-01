@@ -35,7 +35,7 @@ export async function loadProducts({ timeoutMs = 8000 } = {}) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return { products: (await res.json()).map(fromRow), source: 'live' };
   } catch (err) {
-    console.warn('Almakhtoum: using built-in products, database unavailable:', err.message);
+    console.warn('Sunu Waxal: using built-in products, database unavailable:', err.message);
     return { products: SAMPLE_PRODUCTS.map(p => ({ ...p, rating: undefined, reviews: undefined })), source: 'sample' };
   } finally {
     clearTimeout(timer);

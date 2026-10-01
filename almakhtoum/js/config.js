@@ -1,4 +1,4 @@
-/* Almakhtoum — backend settings (Supabase project "almakhtoum").
+/* Sunu Waxal — backend settings (Supabase project "almakhtoum").
    The anon key is public by design: the database's security rules decide
    what it can do (anyone may read visible products; only admins may edit). */
 export const SUPABASE_URL = 'https://qoexakkgymagidymvsde.supabase.co';

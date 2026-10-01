@@ -6,7 +6,7 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 let PRODUCTS = [];  // filled from the database in boot()
 let byId = {};
 const FREE_SHIP = 5000;
-const WHATSAPP = '2202048100'; // +220 204 8100 — all orders go here
+const WHATSAPP = '2202364012'; // +220 236 4012 — all orders go here
 const waLink = text => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -35,7 +35,7 @@ const icons = {
 
 /* ---------- WhatsApp orders ---------- */
 function productMessage(p, size) {
-  return `Hello Almakhtoum! I'd like to buy:\n\n` +
+  return `Hello Sunu Waxal! I'd like to buy:\n\n` +
     `• ${p.name} (#${p.id})\n  Size: ${size}\n  Price: ${formatPrice(p.price)}\n\n` +
     `Is it available? Thank you.`;
 }
@@ -44,7 +44,7 @@ function cartMessage({ name, phone, area, pay } = {}) {
     const p = byId[l.id];
     return `• ${p.name} (#${p.id}) — Size ${l.size} × ${l.qty} = ${formatPrice(p.price * l.qty)}`;
   });
-  let msg = `Hello Almakhtoum! I'd like to order:\n\n${lines.join('\n')}\n\nSubtotal: ${formatPrice(cartTotal())}`;
+  let msg = `Hello Sunu Waxal! I'd like to order:\n\n${lines.join('\n')}\n\nSubtotal: ${formatPrice(cartTotal())}`;
   if (name) msg += `\n\nName: ${name}\nPhone: ${phone}\nDelivery: ${area}\nPayment: ${pay}`;
   return msg;
 }
@@ -332,7 +332,7 @@ function quickView(id) {
       <span class="card-cat">${CATEGORIES.find(c => c.id === p.cat).label}${p.tag ? ' · ' + p.tag : ''}</span>
       <h2 id="qvName">${escapeHTML(p.name)}</h2>
       <div class="card-meta" style="justify-content:flex-start;gap:16px"><span class="price">${formatPrice(p.price)}${p.old ? `<s>${formatPrice(p.old)}</s>` : ''}</span>${p.rating ? `<span class="stars">${p.rating.toFixed(1)} · ${p.reviews} reviews</span>` : ''}</div>
-      <p class="qv-desc">${p.description ? escapeHTML(p.description) : 'Handpicked for comfort in the Gambian heat and made to last. Checked, pressed and sealed by the Almakhtoum team before it ships.'}</p>
+      <p class="qv-desc">${p.description ? escapeHTML(p.description) : 'Handpicked for comfort in the Gambian heat and made to last. Checked and pressed by the Sunu Waxal team before it ships.'}</p>
       <div class="opt-label">Size</div>
       <div class="sizes">${p.sizes.map(s => `<button class="size ${s === size ? 'on' : ''}" data-size="${escapeHTML(s)}">${escapeHTML(s)}</button>`).join('')}</div>
       <div class="qv-actions">

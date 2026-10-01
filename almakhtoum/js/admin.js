@@ -1,4 +1,4 @@
-/* Almakhtoum — admin page: sign in, then add / edit / hide / delete products and photos.
+/* Sunu Waxal — admin page: sign in, then add / edit / hide / delete products and photos.
    Security is enforced by the database (only emails in public.admins can write);
    this page only decides what to show. */
 import { SUPABASE_URL, SUPABASE_ANON_KEY, PHOTO_BUCKET } from './config.js';

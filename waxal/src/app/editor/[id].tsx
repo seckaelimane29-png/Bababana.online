@@ -110,8 +110,10 @@ function Editor({ videoUri }: { videoUri: string }) {
       if (!duration || !Number.isFinite(duration)) return;
       clearInterval(timer);
       const p = projectRef.current;
-      if (!p.duration || p.clips.length === 0) {
-        update((x) => ({ ...x, duration, clips: x.clips.length ? x.clips : [{ id: uid('k'), start: 0, end: duration }] }), { history: false });
+      // Also repairs projects saved with a wrong length (older web builds stored seconds as milliseconds).
+      const untouched = p.clips.length === 1 && p.clips[0].start === 0 && Math.abs(p.clips[0].end - p.duration) < 0.01;
+      if (!p.duration || p.clips.length === 0 || (untouched && Math.abs(p.duration - duration) > 0.2)) {
+        update((x) => ({ ...x, duration, clips: [{ id: uid('k'), start: 0, end: duration }] }), { history: false });
       }
       // iPhone Safari shows a grey box until it decodes a frame; nudging the time makes it draw the first frame.
       if (player.currentTime === 0) player.currentTime = 0.05;

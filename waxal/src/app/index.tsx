@@ -41,7 +41,8 @@ export default function Home() {
       setBusy(true);
       const project = await useLibrary.getState().create({
         uri: a.uri,
-        duration: (a.duration ?? 0) / 1000,
+        // Native pickers report milliseconds, the web picker reports seconds.
+        duration: Platform.OS === 'web' ? (a.duration ?? 0) : (a.duration ?? 0) / 1000,
         width: a.width,
         height: a.height,
         fileName: a.fileName,

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { VideoView, type VideoPlayer } from 'expo-video';
 import { useRef, useState } from 'react';
-import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
+import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CaptionOverlay } from '@/components/CaptionOverlay';
 import { StrokeText } from '@/components/StyledText';
@@ -158,7 +158,8 @@ function TextOverlayView({ overlay, width, height, onEdit }: { overlay: TextOver
 }
 
 const styles = StyleSheet.create({
-  stage: { backgroundColor: '#000', borderRadius: 18, overflow: 'hidden' },
+  // iPhone Safari draws a blank video inside a rounded, clipped box (audio still plays), so skip rounding on web.
+  stage: Platform.OS === 'web' ? { backgroundColor: '#000' } : { backgroundColor: '#000', borderRadius: 18, overflow: 'hidden' },
   playBadge: {
     position: 'absolute',
     alignSelf: 'center',

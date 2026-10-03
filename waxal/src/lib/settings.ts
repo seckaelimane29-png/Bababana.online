@@ -24,9 +24,10 @@ const DEFAULTS: Settings = {
   openaiKey: '',
   elevenlabsKey: '',
   sttProvider: 'elevenlabs',
-  serverUrl: '',
+  // The Waxal render server on Render (see /render.yaml). The token is never stored in code.
+  serverUrl: 'https://waxal-server.onrender.com',
   serverToken: '',
-  transcribeVia: 'device',
+  transcribeVia: 'server',
   chatModel: 'gpt-4o-mini',
   defaultLanguage: 'auto',
 };

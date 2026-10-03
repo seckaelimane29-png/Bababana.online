@@ -102,6 +102,23 @@ function Editor({ videoUri }: { videoUri: string }) {
 
   useEventListener(player, 'playingChange', ({ isPlaying }) => usePlayback.getState().set({ playing: isPlaying }));
 
+  // On the web the player never fires 'sourceLoad', so read the length once the browser knows it.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const timer = setInterval(() => {
+      const duration = player.duration;
+      if (!duration || !Number.isFinite(duration)) return;
+      clearInterval(timer);
+      const p = projectRef.current;
+      if (!p.duration || p.clips.length === 0) {
+        update((x) => ({ ...x, duration, clips: x.clips.length ? x.clips : [{ id: uid('k'), start: 0, end: duration }] }), { history: false });
+      }
+      // iPhone Safari shows a grey box until it decodes a frame; nudging the time makes it draw the first frame.
+      if (player.currentTime === 0) player.currentTime = 0.05;
+    }, 250);
+    return () => clearInterval(timer);
+  }, [player, update]);
+
   // ---- playback clock: follows clips, skipping removed parts
   useEffect(() => {
     let raf = 0;

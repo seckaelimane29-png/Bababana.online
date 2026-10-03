@@ -30,6 +30,8 @@ export function VideoStage({ player, width, height, onTogglePlay, onEditText }: 
         style={StyleSheet.absoluteFill}
         contentFit="contain"
         nativeControls={false}
+        // iPhone Safari: play inside the page instead of jumping to fullscreen.
+        playsInline
         surfaceType="textureView"
       />
       <Pressable style={StyleSheet.absoluteFill} onPress={onTogglePlay}>

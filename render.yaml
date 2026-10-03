@@ -1,0 +1,19 @@
+# Render Blueprint for the Waxal export server (ffmpeg). Render reads this file
+# when you choose New > Blueprint and pick this repository.
+services:
+  - type: web
+    name: waxal-server
+    runtime: docker
+    rootDir: waxal/server
+    dockerfilePath: ./Dockerfile
+    branch: claude/ai-woolf-captions-app-0yk0yr
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: WAXAL_API_TOKEN
+        generateValue: true

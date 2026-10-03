@@ -14,6 +14,9 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const s = useSettings();
   const [key, setKey] = useState(s.openaiKey);
+  const [elevenKey, setElevenKey] = useState(s.elevenlabsKey);
+  const [provider, setProvider] = useState(s.sttProvider);
+  const [showEleven, setShowEleven] = useState(false);
   const [server, setServer] = useState(s.serverUrl);
   const [token, setToken] = useState(s.serverToken);
   const [model, setModel] = useState(s.chatModel);
@@ -33,7 +36,7 @@ export default function SettingsScreen() {
   };
 
   const save = async () => {
-    await s.save({ openaiKey: key.trim(), serverUrl: server.trim(), serverToken: token.trim(), chatModel: model.trim() || 'gpt-4o-mini', transcribeVia: via, defaultLanguage: lang });
+    await s.save({ openaiKey: key.trim(), elevenlabsKey: elevenKey.trim(), sttProvider: provider, serverUrl: server.trim(), serverToken: token.trim(), chatModel: model.trim() || 'gpt-4o-mini', transcribeVia: via, defaultLanguage: lang });
     router.back();
   };
 
@@ -47,6 +50,31 @@ export default function SettingsScreen() {
         <View style={{ width: 40 }} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: insets.bottom + 30, maxWidth: 640, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
+        <Section title="Caption engine">
+          <Row>
+            <Chip label="ElevenLabs (Wolof)" active={provider === 'elevenlabs'} onPress={() => setProvider('elevenlabs')} />
+            <Chip label="OpenAI" active={provider === 'openai'} onPress={() => setProvider('openai')} />
+          </Row>
+          <T style={styles.hint}>ElevenLabs Scribe understands Wolof and 90+ languages. OpenAI Whisper does not support Wolof.</T>
+        </Section>
+
+        <Section title="ElevenLabs API key">
+          <View style={styles.inputRow}>
+            <TextInput
+              value={elevenKey}
+              onChangeText={setElevenKey}
+              placeholder="sk_…"
+              placeholderTextColor={colors.textMute}
+              secureTextEntry={!showEleven}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+            <IconButton icon={showEleven ? 'eye-off' : 'eye'} size={20} color={colors.textDim} onPress={() => setShowEleven(!showEleven)} label="Show key" />
+          </View>
+          <T style={styles.hint}>Used to write captions. Stored encrypted on this device only (Keychain / Keystore).</T>
+        </Section>
+
         <Section title="OpenAI API key">
           <View style={styles.inputRow}>
             <TextInput
@@ -61,7 +89,7 @@ export default function SettingsScreen() {
             />
             <IconButton icon={showKey ? 'eye-off' : 'eye'} size={20} color={colors.textDim} onPress={() => setShowKey(!showKey)} label="Show key" />
           </View>
-          <T style={styles.hint}>Used for speech-to-text (Whisper) and AI tools. Stored encrypted on this device only (Keychain / Keystore).</T>
+          <T style={styles.hint}>Used for Translate and Highlight keywords (and captions if you pick OpenAI). Stored encrypted on this device only.</T>
         </Section>
 
         <Section title="Transcribe with">
@@ -70,7 +98,7 @@ export default function SettingsScreen() {
             <Chip label="Waxal server" active={via === 'server'} onPress={() => setVia('server')} />
           </Row>
           <T style={styles.hint}>
-            “This device” sends the video straight to OpenAI (up to 25 MB). “Waxal server” extracts the audio first, so any length works and the key can live on the server.
+            “This device” sends the video straight to the caption engine. “Waxal server” extracts the audio first (faster uploads) and keeps your keys on the server.
           </T>
         </Section>
 

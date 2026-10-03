@@ -7,7 +7,7 @@ import { Row, Sheet, Toggle } from '@/components/Sheet';
 import { Chip, GradientButton, Section, Slider, T, tap, type IconName } from '@/components/ui';
 import { AIError, highlightKeywords, LANGUAGES, transcribe, translateCaptions } from '@/lib/ai';
 import { allWords, cutSilences, groupWords, isFiller, retextCaption } from '@/lib/captions';
-import { useSettings } from '@/lib/settings';
+import { captionsReady, useSettings } from '@/lib/settings';
 import { useEditor } from '@/store/projects';
 import { colors } from '@/theme';
 
@@ -30,7 +30,8 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const hasCaptions = project.captions.length > 0;
-  const needsSetup = settings.transcribeVia === 'device' ? !settings.openaiKey : !settings.serverUrl;
+  const needsSetup = !captionsReady(settings);
+  const engine = settings.sttProvider === 'elevenlabs' ? 'ElevenLabs' : 'OpenAI';
 
   const run = async () => {
     setBusy(true);
@@ -55,13 +56,13 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
       <View style={styles.hero}>
         <Ionicons name="sparkles" size={22} color={colors.lime} />
         <T style={{ flex: 1, color: colors.textDim, fontSize: 13 }}>
-          Waxal listens to your video and writes word-by-word captions, timed to every syllable.
+          Waxal listens to your video and writes word-by-word captions, timed to every word. Engine: {engine}.
         </T>
       </View>
       {needsSetup ? (
         <Pressable onPress={() => router.push('/settings')} style={styles.warn}>
           <Ionicons name="key" size={18} color={colors.warning} />
-          <T style={{ flex: 1, fontSize: 13 }}>Add your OpenAI API key in Settings to enable AI captions.</T>
+          <T style={{ flex: 1, fontSize: 13 }}>{settings.transcribeVia === 'server' ? 'Add your Waxal server URL in Settings to enable AI captions.' : `Add your ${engine} API key in Settings to enable AI captions.`}</T>
           <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
         </Pressable>
       ) : null}

@@ -7,7 +7,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, StyleSh
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GradientButton, IconButton, SoftButton, T, tap } from '@/components/ui';
-import { useSettings } from '@/lib/settings';
+import { captionsReady, useSettings } from '@/lib/settings';
 import { formatTime } from '@/lib/timeline';
 import { useLibrary, type ProjectSummary } from '@/store/projects';
 import { colors, gradient } from '@/theme';
@@ -24,7 +24,7 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const projects = useLibrary((s) => s.projects);
-  const hasKey = useSettings((s) => !!s.openaiKey || (s.transcribeVia === 'server' && !!s.serverUrl));
+  const hasKey = useSettings(captionsReady);
   const [busy, setBusy] = useState(false);
   const [renaming, setRenaming] = useState<ProjectSummary | null>(null);
 
@@ -126,7 +126,7 @@ export default function Home() {
             {!hasKey ? (
               <Pressable onPress={() => router.push('/settings')} style={styles.keyCard}>
                 <Ionicons name="key" size={18} color={colors.warning} />
-                <T style={{ flex: 1, fontSize: 13 }}>Connect your OpenAI API key to turn on AI captions.</T>
+                <T style={{ flex: 1, fontSize: 13 }}>Add your ElevenLabs API key in Settings to turn on AI captions.</T>
                 <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
               </Pressable>
             ) : null}

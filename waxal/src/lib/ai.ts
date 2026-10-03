@@ -6,6 +6,7 @@ import { serverBase, serverHeaders, useSettings } from '@/lib/settings';
 import type { Caption, Word } from '@/types';
 
 const OPENAI = 'https://api.openai.com/v1';
+const ELEVENLABS = 'https://api.elevenlabs.io/v1';
 const WHISPER_LIMIT = 25 * 1024 * 1024;
 
 export class AIError extends Error {}
@@ -77,17 +78,34 @@ export async function transcribe(
 
   if (s.transcribeVia === 'server') {
     const base = serverBase();
-    if (!base) throw new AIError('Add your Waxal server URL in Settings, or switch transcription to "On device".');
-    const data = await uploadVideo(`${base}/transcribe`, videoUri, lang ? { language: lang } : {}, serverHeaders(), onProgress);
+    if (!base) throw new AIError('Add your Waxal server URL in Settings, or switch transcription to "This device".');
+    const params: Record<string, string> = { provider: s.sttProvider };
+    if (lang) params.language = lang;
+    const data = await uploadVideo(`${base}/transcribe`, videoUri, params, serverHeaders(), onProgress);
     return { words: toWords(data.words ?? []), language: data.language ?? lang ?? null };
   }
 
+  if (s.sttProvider === 'elevenlabs') {
+    if (!s.elevenlabsKey) throw new AIError('Add your ElevenLabs API key in Settings to generate captions.');
+    const params: Record<string, string> = {
+      model_id: 'scribe_v2',
+      timestamps_granularity: 'word',
+      tag_audio_events: 'false',
+    };
+    if (lang) params.language_code = lang;
+    const data = await uploadVideo(`${ELEVENLABS}/speech-to-text`, videoUri, params, { 'xi-api-key': s.elevenlabsKey }, onProgress);
+    return { words: elevenWords(data), language: data.language_code ?? lang ?? null };
+  }
+
   if (!s.openaiKey) throw new AIError('Add your OpenAI API key in Settings to generate captions.');
+  if (lang && !OPENAI_LANGS.has(lang)) {
+    throw new AIError(`OpenAI does not support ${LANGUAGES.find((l) => l.code === lang)?.name ?? lang}. Switch the caption engine to ElevenLabs in Settings.`);
+  }
   if (Platform.OS !== 'web') {
     const size = new File(videoUri).size ?? 0;
     if (size > WHISPER_LIMIT) {
       throw new AIError(
-        `This video is ${(size / 1048576).toFixed(0)} MB. Direct transcription supports up to 25 MB — set up the Waxal server in Settings for longer videos (it extracts the audio first).`,
+        `This video is ${(size / 1048576).toFixed(0)} MB. OpenAI accepts up to 25 MB — use ElevenLabs or the Waxal server in Settings for longer videos.`,
       );
     }
   }
@@ -99,6 +117,11 @@ export async function transcribe(
   if (lang) params.language = lang;
   const data = await uploadVideo(`${OPENAI}/audio/transcriptions`, videoUri, params, { Authorization: `Bearer ${s.openaiKey}` }, onProgress);
   return { words: toWords(data.words ?? []), language: data.language ?? lang ?? null };
+}
+
+/** ElevenLabs returns words, spaces and audio events; keep only the spoken words. */
+export function elevenWords(data: { words?: { text: string; start: number; end: number; type?: string }[] }): Word[] {
+  return toWords((data.words ?? []).filter((w) => (w.type ?? 'word') === 'word').map((w) => ({ word: w.text, start: w.start, end: w.end })));
 }
 
 /** Chat completion that must return JSON. Goes direct to OpenAI, or through the server when no key is set. */
@@ -171,8 +194,9 @@ export async function highlightKeywords(
 
 export const LANGUAGES: { code: string; name: string }[] = [
   { code: 'auto', name: 'Auto-detect' },
-  { code: 'en', name: 'English' },
+  { code: 'wo', name: 'Wolof' },
   { code: 'fr', name: 'French' },
+  { code: 'en', name: 'English' },
   { code: 'ar', name: 'Arabic' },
   { code: 'es', name: 'Spanish' },
   { code: 'pt', name: 'Portuguese' },
@@ -188,5 +212,8 @@ export const LANGUAGES: { code: string; name: string }[] = [
   { code: 'pl', name: 'Polish' },
   { code: 'id', name: 'Indonesian' },
   { code: 'sw', name: 'Swahili' },
-  { code: 'wo', name: 'Wolof' },
+  { code: 'ff', name: 'Fula' },
 ];
+
+/** Languages in the list above that OpenAI Whisper accepts (Wolof and Fula are not among them). */
+const OPENAI_LANGS = new Set(['en', 'fr', 'ar', 'es', 'pt', 'de', 'it', 'tr', 'ru', 'hi', 'zh', 'ja', 'ko', 'nl', 'pl', 'id', 'sw']);

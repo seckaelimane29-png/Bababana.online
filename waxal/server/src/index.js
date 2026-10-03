@@ -12,6 +12,7 @@ import { extractAudio, renderProject } from './render.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
+const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY || '';
 const TOKEN = process.env.WAXAL_API_TOKEN || '';
 const CHAT_MODEL = process.env.WAXAL_CHAT_MODEL || '';
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 1024);
@@ -47,32 +48,65 @@ app.use((req, res, next) => {
   res.status(401).json({ error: 'Invalid or missing server token' });
 });
 
-app.get('/health', (_req, res) => res.json({ ok: true, openai: !!OPENAI_KEY }));
+app.get('/health', (_req, res) => res.json({ ok: true, openai: !!OPENAI_KEY, elevenlabs: !!ELEVENLABS_KEY }));
 
 // ---------- AI ----------
 
+async function readJson(r) {
+  const body = await r.text();
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw Object.assign(new Error(`Unexpected response (${r.status}): ${body.slice(0, 200)}`), { status: 502 });
+  }
+}
+
+async function transcribeElevenLabs(mp3, language) {
+  const form = new FormData();
+  form.append('file', new Blob([await readFile(mp3)], { type: 'audio/mpeg' }), 'audio.mp3');
+  form.append('model_id', 'scribe_v2');
+  form.append('timestamps_granularity', 'word');
+  form.append('tag_audio_events', 'false');
+  if (language) form.append('language_code', language);
+  const r = await fetch('https://api.elevenlabs.io/v1/speech-to-text', { method: 'POST', headers: { 'xi-api-key': ELEVENLABS_KEY }, body: form });
+  const data = await readJson(r);
+  if (!r.ok) throw Object.assign(new Error(data?.detail?.message || data?.detail || 'Transcription failed'), { status: r.status });
+  // ElevenLabs also returns spaces and audio events; keep only spoken words, in the shape the app expects.
+  const words = (data.words || []).filter((w) => (w.type || 'word') === 'word').map((w) => ({ word: w.text, start: w.start, end: w.end }));
+  return { words, language: data.language_code || null, text: data.text };
+}
+
+async function transcribeOpenAI(mp3, language) {
+  const form = new FormData();
+  form.append('file', new Blob([await readFile(mp3)], { type: 'audio/mpeg' }), 'audio.mp3');
+  form.append('model', 'whisper-1');
+  form.append('response_format', 'verbose_json');
+  form.append('timestamp_granularities[]', 'word');
+  if (language) form.append('language', language);
+  const r = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${OPENAI_KEY}` }, body: form });
+  const data = await readJson(r);
+  if (!r.ok) throw Object.assign(new Error(data?.error?.message || 'Transcription failed'), { status: r.status });
+  return { words: data.words || [], language: data.language || null, text: data.text };
+}
+
 app.post('/transcribe', upload.single('file'), async (req, res) => {
   const file = req.file;
+  const mp3 = file ? `${file.path}.mp3` : null;
   try {
-    if (!OPENAI_KEY) return res.status(500).json({ error: 'Server has no OPENAI_API_KEY configured' });
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
-    const mp3 = `${file.path}.mp3`;
+    // Default to ElevenLabs (supports Wolof); fall back to whichever key the server has.
+    const wanted = req.body.provider === 'openai' ? 'openai' : 'elevenlabs';
+    const provider = wanted === 'elevenlabs' && ELEVENLABS_KEY ? 'elevenlabs' : OPENAI_KEY ? 'openai' : ELEVENLABS_KEY ? 'elevenlabs' : null;
+    if (!provider) return res.status(500).json({ error: 'Server has no ELEVENLABS_API_KEY or OPENAI_API_KEY configured' });
     await extractAudio(file.path, mp3);
-    const form = new FormData();
-    form.append('file', new Blob([await readFile(mp3)], { type: 'audio/mpeg' }), 'audio.mp3');
-    form.append('model', 'whisper-1');
-    form.append('response_format', 'verbose_json');
-    form.append('timestamp_granularities[]', 'word');
-    if (req.body.language) form.append('language', String(req.body.language));
-    const r = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${OPENAI_KEY}` }, body: form });
-    const data = await r.json();
-    await rm(mp3, { force: true });
-    if (!r.ok) return res.status(r.status).json({ error: data?.error?.message || 'Transcription failed' });
-    res.json({ words: data.words || [], language: data.language || null, text: data.text });
+    const language = req.body.language ? String(req.body.language) : undefined;
+    const result = provider === 'elevenlabs' ? await transcribeElevenLabs(mp3, language) : await transcribeOpenAI(mp3, language);
+    res.json({ ...result, provider });
   } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
+    res.status(e.status || 500).json({ error: String(e.message || e) });
   } finally {
     if (file) rm(file.path, { force: true }).catch(() => {});
+    if (mp3) rm(mp3, { force: true }).catch(() => {});
   }
 });
 
@@ -178,4 +212,4 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000).unref();
 
-app.listen(PORT, () => console.log(`Waxal server on :${PORT} (openai: ${OPENAI_KEY ? 'yes' : 'no'}, token: ${TOKEN ? 'required' : 'off'})`));
+app.listen(PORT, () => console.log(`Waxal server on :${PORT} (elevenlabs: ${ELEVENLABS_KEY ? 'yes' : 'no'}, openai: ${OPENAI_KEY ? 'yes' : 'no'}, token: ${TOKEN ? 'required' : 'off'})`));

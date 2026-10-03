@@ -6,7 +6,7 @@ AI auto-captions video editor for **iOS and Android** (Expo / React Native). Upl
 
 | Area | What you get |
 | --- | --- |
-| **AI captions** | Word-level timestamps (OpenAI Whisper), 18 languages + auto-detect, regroup by words-per-line |
+| **AI captions** | Word-level timestamps from **ElevenLabs Scribe** (supports Wolof) or OpenAI Whisper, 19 languages + auto-detect, regroup by words-per-line |
 | **Caption styles** | 8 templates (Waxal, Hype, Karaoke, Boxed, Cinema, Neon, Marker, Clean), 6 fonts, size, position (drag on the video), text / active-word / keyword / outline colors, background box, ALL CAPS, shadow |
 | **Animations** | Pop, Bounce, Karaoke fill, Fade, None — same look in the preview and in the exported MP4 |
 | **Editing** | Split (cut), Delete, Trim start / end, Duplicate, Undo / Redo (60 steps), Restore original, multi-track timeline with thumbnails and zoom |
@@ -42,12 +42,12 @@ npx eas-cli@latest build --profile development --platform ios      # or android
 
 ## API key
 
-Open **Settings** in the app and paste your **OpenAI API key**. It is stored encrypted on the device (iOS Keychain / Android Keystore) and used for:
+Open **Settings** in the app and paste your keys. They are stored encrypted on the device (iOS Keychain / Android Keystore).
 
-- speech-to-text (`whisper-1`, word timestamps)
-- translate captions + highlight keywords (`gpt-4o-mini` by default, editable in Settings)
+- **ElevenLabs key**: writes the captions (`scribe_v2`, word timestamps). Default engine, and the one that understands Wolof.
+- **OpenAI key** (optional): Translate and Highlight keywords (`gpt-4o-mini` by default, editable in Settings). Can also write captions, but not in Wolof.
 
-For a public App Store / Play Store release, don't ship your own key inside the app. Run the server with `OPENAI_API_KEY` set and switch **Transcribe with → Waxal server** so the key stays on the server.
+For a public App Store / Play Store release, don't ship your own keys inside the app. Run the server with `ELEVENLABS_API_KEY` / `OPENAI_API_KEY` set and switch **Transcribe with → Waxal server** so the keys stay on the server.
 
 ## Export server
 

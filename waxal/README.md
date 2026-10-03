@@ -1,4 +1,4 @@
-# Woolf Captions
+# Waxal
 
 AI auto-captions video editor for **iOS and Android** (Expo / React Native). Upload or record a video, generate word-by-word animated captions with AI, style them, cut the video, add text, and export.
 
@@ -7,7 +7,7 @@ AI auto-captions video editor for **iOS and Android** (Expo / React Native). Upl
 | Area | What you get |
 | --- | --- |
 | **AI captions** | Word-level timestamps (OpenAI Whisper), 18 languages + auto-detect, regroup by words-per-line |
-| **Caption styles** | 8 templates (Woolf, Hype, Karaoke, Boxed, Cinema, Neon, Marker, Clean), 6 fonts, size, position (drag on the video), text / active-word / keyword / outline colors, background box, ALL CAPS, shadow |
+| **Caption styles** | 8 templates (Waxal, Hype, Karaoke, Boxed, Cinema, Neon, Marker, Clean), 6 fonts, size, position (drag on the video), text / active-word / keyword / outline colors, background box, ALL CAPS, shadow |
 | **Animations** | Pop, Bounce, Karaoke fill, Fade, None — same look in the preview and in the exported MP4 |
 | **Editing** | Split (cut), Delete, Trim start / end, Duplicate, Undo / Redo (60 steps), Restore original, multi-track timeline with thumbnails and zoom |
 | **Text** | Add text, drag to move, double-tap to edit, fonts, colors, background, outline, duration, split |
@@ -47,7 +47,7 @@ Open **Settings** in the app and paste your **OpenAI API key**. It is stored enc
 - speech-to-text (`whisper-1`, word timestamps)
 - translate captions + highlight keywords (`gpt-4o-mini` by default, editable in Settings)
 
-For a public App Store / Play Store release, don't ship your own key inside the app. Run the server with `OPENAI_API_KEY` set and switch **Transcribe with → Woolf server** so the key stays on the server.
+For a public App Store / Play Store release, don't ship your own key inside the app. Run the server with `OPENAI_API_KEY` set and switch **Transcribe with → Waxal server** so the key stays on the server.
 
 ## Export server
 
@@ -57,6 +57,6 @@ Burning animated captions into an MP4 needs ffmpeg, which runs on the server in 
 
 1. `npm i -g eas-cli && eas login` (free Expo account)
 2. `eas init` — links the project and writes the project ID into `app.json`
-3. Check `ios.bundleIdentifier` / `android.package` in `app.json` (currently `online.bababana.woolfcaptions`) and replace the icons in `assets/`
+3. Check `ios.bundleIdentifier` / `android.package` in `app.json` (currently `online.bababana.waxal`) and replace the icons in `assets/`
 4. Build: `npm run build:ios` and `npm run build:android` (EAS handles signing certificates)
 5. Submit: `npx eas-cli@latest submit -p ios` (needs an Apple Developer account, $99/yr) and `npx eas-cli@latest submit -p android` (needs a Google Play Console account, $25 once)

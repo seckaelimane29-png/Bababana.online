@@ -3,7 +3,7 @@ import type { CaptionStyle } from '@/types';
 export type Template = { id: string; name: string; style: CaptionStyle };
 
 const base: CaptionStyle = {
-  templateId: 'woolf',
+  templateId: 'waxal',
   font: 'montserrat',
   size: 0.068,
   color: '#FFFFFF',
@@ -20,7 +20,7 @@ const base: CaptionStyle = {
 };
 
 export const TEMPLATES: Template[] = [
-  { id: 'woolf', name: 'Woolf', style: base },
+  { id: 'waxal', name: 'Waxal', style: base },
   {
     id: 'hype',
     name: 'Hype',

@@ -12,10 +12,10 @@ import { extractAudio, renderProject } from './render.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
-const TOKEN = process.env.WOOLF_API_TOKEN || '';
-const CHAT_MODEL = process.env.WOOLF_CHAT_MODEL || '';
+const TOKEN = process.env.WAXAL_API_TOKEN || '';
+const CHAT_MODEL = process.env.WAXAL_CHAT_MODEL || '';
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 1024);
-const ROOT = path.join(os.tmpdir(), 'woolf');
+const ROOT = path.join(os.tmpdir(), 'waxal');
 const UPLOADS = path.join(ROOT, 'uploads');
 const JOBS = path.join(ROOT, 'jobs');
 const FONTS = path.join(ROOT, 'fonts');
@@ -42,7 +42,7 @@ const upload = multer({ dest: UPLOADS, limits: { fileSize: MAX_UPLOAD_MB * 1024 
 
 app.use((req, res, next) => {
   if (!TOKEN || req.path === '/health') return next();
-  const header = req.get('x-woolf-token') || req.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const header = req.get('x-waxal-token') || req.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (header === TOKEN || req.query.token === TOKEN) return next();
   res.status(401).json({ error: 'Invalid or missing server token' });
 });
@@ -157,7 +157,7 @@ app.get('/render/:id/file', (req, res) => {
   if (!job?.output || !existsSync(job.output)) return res.status(404).json({ error: 'Not ready' });
   res.setHeader('Content-Type', 'video/mp4');
   res.setHeader('Content-Length', statSync(job.output).size);
-  res.setHeader('Content-Disposition', `attachment; filename="woolf-${job.id.slice(0, 8)}.mp4"`);
+  res.setHeader('Content-Disposition', `attachment; filename="waxal-${job.id.slice(0, 8)}.mp4"`);
   createReadStream(job.output).pipe(res);
 });
 
@@ -178,4 +178,4 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000).unref();
 
-app.listen(PORT, () => console.log(`Woolf server on :${PORT} (openai: ${OPENAI_KEY ? 'yes' : 'no'}, token: ${TOKEN ? 'required' : 'off'})`));
+app.listen(PORT, () => console.log(`Waxal server on :${PORT} (openai: ${OPENAI_KEY ? 'yes' : 'no'}, token: ${TOKEN ? 'required' : 'off'})`));

@@ -1,8 +1,8 @@
 {
-  "name": "woolf-captions-server",
+  "name": "waxal-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Render + AI server for Woolf Captions: transcription proxy and ffmpeg video export with burned-in animated captions.",
+  "description": "Render + AI server for Waxal: transcription proxy and ffmpeg video export with burned-in animated captions.",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

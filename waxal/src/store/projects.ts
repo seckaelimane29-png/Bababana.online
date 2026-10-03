@@ -7,8 +7,8 @@ import { uid } from '@/lib/id';
 import { DEFAULT_STYLE } from '@/lib/templates';
 import type { Project, Selection } from '@/types';
 
-const INDEX_KEY = 'woolf.projects';
-const projectKey = (id: string) => `woolf.project.${id}`;
+const INDEX_KEY = 'waxal.projects';
+const projectKey = (id: string) => `waxal.project.${id}`;
 const HISTORY_LIMIT = 60;
 
 export type ProjectSummary = Pick<Project, 'id' | 'name' | 'updatedAt' | 'duration' | 'videoUri' | 'width' | 'height'> & {

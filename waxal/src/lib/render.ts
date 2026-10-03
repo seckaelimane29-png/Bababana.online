@@ -29,7 +29,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Upload → server renders with ffmpeg (cuts, speed, volume, burned-in animated captions) → download. Returns a local file URI. */
 export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: RenderStage) => void, signal?: { cancelled: boolean }): Promise<string> {
   const base = serverBase();
-  if (!base) throw new Error('Add your Woolf server URL in Settings to export videos with burned-in captions.');
+  if (!base) throw new Error('Add your Waxal server URL in Settings to export videos with burned-in captions.');
 
   onStage({ stage: 'upload', progress: 0 });
   let job: { id: string };
@@ -70,10 +70,10 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
   const url = `${base}/render/${job.id}/file`;
   if (Platform.OS === 'web') {
     onStage({ stage: 'done', progress: 1 });
-    const token = serverHeaders()['x-woolf-token'];
+    const token = serverHeaders()['x-waxal-token'];
     return token ? `${url}?token=${encodeURIComponent(token)}` : url;
   }
-  const dest = new File(Paths.cache, `woolf-${p.id}-${Date.now()}.mp4`);
+  const dest = new File(Paths.cache, `waxal-${p.id}-${Date.now()}.mp4`);
   const file = await File.downloadFileAsync(url, dest, {
     headers: serverHeaders(),
     onProgress: (d) => d.totalBytes && onStage({ stage: 'download', progress: d.bytesWritten / d.totalBytes }),

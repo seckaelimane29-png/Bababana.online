@@ -77,7 +77,7 @@ export async function transcribe(
 
   if (s.transcribeVia === 'server') {
     const base = serverBase();
-    if (!base) throw new AIError('Add your Woolf server URL in Settings, or switch transcription to "On device".');
+    if (!base) throw new AIError('Add your Waxal server URL in Settings, or switch transcription to "On device".');
     const data = await uploadVideo(`${base}/transcribe`, videoUri, lang ? { language: lang } : {}, serverHeaders(), onProgress);
     return { words: toWords(data.words ?? []), language: data.language ?? lang ?? null };
   }
@@ -87,7 +87,7 @@ export async function transcribe(
     const size = new File(videoUri).size ?? 0;
     if (size > WHISPER_LIMIT) {
       throw new AIError(
-        `This video is ${(size / 1048576).toFixed(0)} MB. Direct transcription supports up to 25 MB — set up the Woolf server in Settings for longer videos (it extracts the audio first).`,
+        `This video is ${(size / 1048576).toFixed(0)} MB. Direct transcription supports up to 25 MB — set up the Waxal server in Settings for longer videos (it extracts the audio first).`,
       );
     }
   }
@@ -126,7 +126,7 @@ async function chatJSON(system: string, user: string): Promise<any> {
       body: JSON.stringify(body),
     });
   } else {
-    throw new AIError('Add your OpenAI API key (or a Woolf server URL) in Settings.');
+    throw new AIError('Add your OpenAI API key (or a Waxal server URL) in Settings.');
   }
   const data = parseJSON(await res.text(), res.status);
   const content = data?.choices?.[0]?.message?.content;

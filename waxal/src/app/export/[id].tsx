@@ -146,7 +146,7 @@ export default function ExportScreen() {
           <Pressable onPress={() => router.push('/settings')} style={styles.warn}>
             <Ionicons name="server-outline" size={18} color={colors.warning} />
             <T style={{ flex: 1, fontSize: 13, lineHeight: 18 }}>
-              MP4 export runs on your Woolf render server (ffmpeg). Add its URL in Settings. Caption files below work without it.
+              MP4 export runs on your Waxal render server (ffmpeg). Add its URL in Settings. Caption files below work without it.
             </T>
             <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
           </Pressable>

@@ -55,7 +55,7 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
       <View style={styles.hero}>
         <Ionicons name="sparkles" size={22} color={colors.lime} />
         <T style={{ flex: 1, color: colors.textDim, fontSize: 13 }}>
-          Woolf listens to your video and writes word-by-word captions, timed to every syllable.
+          Waxal listens to your video and writes word-by-word captions, timed to every syllable.
         </T>
       </View>
       {needsSetup ? (

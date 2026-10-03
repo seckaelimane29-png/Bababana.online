@@ -1,4 +1,4 @@
-# Woolf Captions server
+# Waxal server
 
 Small Node + ffmpeg service used by the app for:
 
@@ -18,18 +18,18 @@ OPENAI_API_KEY=sk-... npm start          # needs ffmpeg on PATH
 Or with Docker (ffmpeg included):
 
 ```bash
-docker build -t woolf-server .
-docker run -p 8787:8787 -e OPENAI_API_KEY=sk-... -e WOOLF_API_TOKEN=choose-a-secret woolf-server
+docker build -t waxal-server .
+docker run -p 8787:8787 -e OPENAI_API_KEY=sk-... -e WAXAL_API_TOKEN=choose-a-secret waxal-server
 ```
 
-Then in the app: **Settings → Woolf server URL** = `https://your-host` (and the same token in **Server token**).
+Then in the app: **Settings → Waxal server URL** = `https://your-host` (and the same token in **Server token**).
 
 | Env var | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `8787` | HTTP port |
 | `OPENAI_API_KEY` | — | Needed for `/transcribe` and `/ai/chat` |
-| `WOOLF_API_TOKEN` | — | If set, every request must send `x-woolf-token` |
-| `WOOLF_CHAT_MODEL` | — | Force a chat model for `/ai/chat` |
+| `WAXAL_API_TOKEN` | — | If set, every request must send `x-waxal-token` |
+| `WAXAL_CHAT_MODEL` | — | Force a chat model for `/ai/chat` |
 | `MAX_UPLOAD_MB` | `1024` | Upload limit |
 
 Deploy anywhere that runs Docker (Render, Railway, Fly.io, a VPS). Renders run one at a time and are deleted after an hour.

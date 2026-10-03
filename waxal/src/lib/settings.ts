@@ -5,9 +5,9 @@ import { create } from 'zustand';
 
 export type Settings = {
   openaiKey: string;
-  /** Optional Woolf render/AI server (see /server). Needed for burned-in video export. */
+  /** Optional Waxal render/AI server (see /server). Needed for burned-in video export. */
   serverUrl: string;
-  /** Optional shared secret if the server sets WOOLF_API_TOKEN. */
+  /** Optional shared secret if the server sets WAXAL_API_TOKEN. */
   serverToken: string;
   /** Who transcribes: 'device' calls OpenAI from the phone with the key above, 'server' uses the server. */
   transcribeVia: 'device' | 'server';
@@ -24,8 +24,8 @@ const DEFAULTS: Settings = {
   defaultLanguage: 'auto',
 };
 
-const KEY_STORE = 'woolf.openaiKey';
-const SETTINGS_STORE = 'woolf.settings';
+const KEY_STORE = 'waxal.openaiKey';
+const SETTINGS_STORE = 'waxal.settings';
 
 async function readSecret(): Promise<string> {
   try {
@@ -70,5 +70,5 @@ export function serverBase(): string {
 
 export function serverHeaders(): Record<string, string> {
   const token = useSettings.getState().serverToken.trim();
-  return token ? { 'x-woolf-token': token } : {};
+  return token ? { 'x-waxal-token': token } : {};
 }

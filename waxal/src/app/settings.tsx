@@ -67,14 +67,14 @@ export default function SettingsScreen() {
         <Section title="Transcribe with">
           <Row>
             <Chip label="This device" active={via === 'device'} onPress={() => setVia('device')} />
-            <Chip label="Woolf server" active={via === 'server'} onPress={() => setVia('server')} />
+            <Chip label="Waxal server" active={via === 'server'} onPress={() => setVia('server')} />
           </Row>
           <T style={styles.hint}>
-            “This device” sends the video straight to OpenAI (up to 25 MB). “Woolf server” extracts the audio first, so any length works and the key can live on the server.
+            “This device” sends the video straight to OpenAI (up to 25 MB). “Waxal server” extracts the audio first, so any length works and the key can live on the server.
           </T>
         </Section>
 
-        <Section title="Woolf server URL (for video export)">
+        <Section title="Waxal server URL (for video export)">
           <TextInput value={server} onChangeText={(v) => { setServer(v); setCheck('idle'); }} placeholder="https://your-server.example.com" placeholderTextColor={colors.textMute} autoCapitalize="none" autoCorrect={false} keyboardType="url" style={[styles.input, styles.box]} />
           <TextInput value={token} onChangeText={setToken} placeholder="Server token (optional)" placeholderTextColor={colors.textMute} autoCapitalize="none" autoCorrect={false} secureTextEntry style={[styles.input, styles.box, { marginTop: 10 }]} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>

@@ -96,7 +96,7 @@ export default function Home() {
                   <Ionicons name="chatbubbles" size={18} color="#fff" />
                 </LinearGradient>
                 <T weight="bold" style={{ fontSize: 24, letterSpacing: -0.5 }}>
-                  Woolf
+                  Waxal
                 </T>
               </View>
               <IconButton icon="settings-outline" onPress={() => router.push('/settings')} label="Settings" />

@@ -15,5 +15,6 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-      - key: WAXAL_API_TOKEN
-        generateValue: true
+      # Abuse protection is the per-visitor limit (requests per hour). No token needed.
+      - key: RATE_LIMIT_PER_HOUR
+        value: "40"

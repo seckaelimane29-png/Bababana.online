@@ -6,8 +6,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, StyleSheet, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GradientButton, IconButton, SoftButton, T, tap } from '@/components/ui';
-import { captionsReady, useSettings } from '@/lib/settings';
+import { GradientButton, SoftButton, T, tap } from '@/components/ui';
 import { formatTime } from '@/lib/timeline';
 import { useLibrary, type ProjectSummary } from '@/store/projects';
 import { colors, gradient } from '@/theme';
@@ -24,7 +23,6 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const projects = useLibrary((s) => s.projects);
-  const hasKey = useSettings(captionsReady);
   const [busy, setBusy] = useState(false);
   const [renaming, setRenaming] = useState<ProjectSummary | null>(null);
 
@@ -47,7 +45,7 @@ export default function Home() {
         height: a.height,
         fileName: a.fileName,
       });
-      router.push({ pathname: '/editor/[id]', params: { id: project.id } });
+      router.push({ pathname: '/editor/[id]', params: { id: project.id, fresh: '1' } });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (Platform.OS === 'web') window.alert(msg);
@@ -92,15 +90,15 @@ export default function Home() {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {/* No settings for users. Owner access: press and hold the logo for 3 seconds. */}
+              <Pressable delayLongPress={3000} onLongPress={() => router.push('/settings')} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.logo}>
                   <Ionicons name="chatbubbles" size={18} color="#fff" />
                 </LinearGradient>
                 <T weight="bold" style={{ fontSize: 24, letterSpacing: -0.5 }}>
                   Waxal
                 </T>
-              </View>
-              <IconButton icon="settings-outline" onPress={() => router.push('/settings')} label="Settings" />
+              </Pressable>
             </View>
 
             <LinearGradient colors={['#1E1640', '#2A1035']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
@@ -124,13 +122,6 @@ export default function Home() {
               <SoftButton icon="videocam" label="Record video" onPress={() => start('camera')} style={{ marginTop: 10 }} />
             </LinearGradient>
 
-            {!hasKey ? (
-              <Pressable onPress={() => router.push('/settings')} style={styles.keyCard}>
-                <Ionicons name="key" size={18} color={colors.warning} />
-                <T style={{ flex: 1, fontSize: 13 }}>AI captions are not set up yet.</T>
-                <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
-              </Pressable>
-            ) : null}
 
             <View style={styles.features}>
               {[
@@ -236,7 +227,6 @@ const styles = StyleSheet.create({
   logo: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   hero: { borderRadius: 28, padding: 22, borderWidth: 1, borderColor: '#3A2A60' },
   heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(198,255,61,0.1)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  keyCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#2A2210', borderRadius: 16, padding: 14, marginTop: 12, borderWidth: 1, borderColor: '#4A3B12' },
   features: { flexDirection: 'row', gap: 8, marginTop: 14 },
   feature: { flex: 1, alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 12, borderWidth: 1, borderColor: colors.border },
   card: { borderRadius: 20, padding: 12, justifyContent: 'space-between' },

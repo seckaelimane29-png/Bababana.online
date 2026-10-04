@@ -58,11 +58,13 @@ export default function EditorScreen() {
 }
 
 function Editor({ videoUri }: { videoUri: string }) {
+  const { fresh } = useLocalSearchParams<{ fresh?: string }>();
   const insets = useSafeAreaInsets();
   const { width: screenW } = useWindowDimensions();
   const project = useEditor((s) => s.project)!;
   const { selection, select, update, undo, redo, past, future } = useEditor();
-  const [panel, setPanel] = useState<Panel>(null);
+  // A brand-new video opens straight into Auto captions, like TikTok.
+  const [panel, setPanel] = useState<Panel>(() => (fresh === '1' && !useEditor.getState().project?.captions.length ? 'captions' : null));
   const [area, setArea] = useState({ w: 0, h: 0 });
   const [thumbs, setThumbs] = useState<{ time: number; thumb: VideoThumbnail }[]>([]);
 

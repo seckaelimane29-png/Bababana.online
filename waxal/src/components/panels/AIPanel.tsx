@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,7 +8,7 @@ import { Chip, GradientButton, Section, Slider, T, tap, type IconName } from '@/
 import { AIError, highlightKeywords, LANGUAGES, transcribe, translateCaptions } from '@/lib/ai';
 import { allWords, cutSilences, groupWords, isFiller, regroup, retextCaption } from '@/lib/captions';
 import type { Template } from '@/lib/templates';
-import { captionsReady, useSettings } from '@/lib/settings';
+import { useSettings } from '@/lib/settings';
 import { useEditor } from '@/store/projects';
 import { colors } from '@/theme';
 
@@ -33,8 +32,6 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const hasCaptions = project.captions.length > 0;
-  const needsSetup = !captionsReady(settings);
-  const engine = settings.sttProvider === 'elevenlabs' ? 'ElevenLabs' : 'OpenAI';
   const langName = LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
 
   const pickTemplate = (t: Template) =>
@@ -68,18 +65,11 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
       <T weight="semibold">{progress > 0 && progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Writing captions…'}</T>
     </View>
   ) : (
-    <GradientButton icon="sparkles" label={hasCaptions ? 'Apply & regenerate' : 'Generate captions'} onPress={run} disabled={needsSetup} />
+    <GradientButton icon="sparkles" label={hasCaptions ? 'Apply & regenerate' : 'Generate captions'} onPress={run} />
   );
 
   return (
     <Sheet title="Auto captions" onClose={onClose} maxHeight="88%" footer={footer}>
-      {needsSetup ? (
-        <Pressable onPress={() => router.push('/settings')} style={styles.warn}>
-          <Ionicons name="key" size={18} color={colors.warning} />
-          <T style={{ flex: 1, fontSize: 13 }}>AI captions are not set up yet. Please try again later.</T>
-          <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
-        </Pressable>
-      ) : null}
 
       <Pressable onPress={() => setShowLangs((v) => !v)} style={styles.row}>
         <Ionicons name="language" size={20} color={colors.text} />

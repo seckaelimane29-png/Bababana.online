@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 import { uid } from '@/lib/id';
 import { serverBase, serverHeaders, useSettings } from '@/lib/settings';
+import { extractAudioWav, postForm } from '@/lib/webAudio';
 import type { Caption, Word } from '@/types';
 
 const OPENAI = 'https://api.openai.com/v1';
@@ -37,14 +38,21 @@ async function uploadVideo(
   params: Record<string, string>,
   headers: Record<string, string>,
   onProgress?: (p: number) => void,
+  audioOnly = false,
 ): Promise<any> {
   if (Platform.OS === 'web') {
-    const blob = await (await fetch(uri)).blob();
+    // Send only the audio when the browser can extract it (a few MB instead of the whole video).
+    const audio = audioOnly ? await extractAudioWav(uri) : null;
+    const blob = audio ?? (await (await fetch(uri)).blob());
     const form = new FormData();
-    form.append('file', blob, 'video.mp4');
+    form.append('file', blob, audio ? 'audio.wav' : 'video.mp4');
     Object.entries(params).forEach(([k, v]) => form.append(k, v));
-    const res = await fetch(url, { method: 'POST', headers, body: form });
-    return parseJSON(await res.text(), res.status);
+    try {
+      const res = await postForm(url, form, headers, onProgress);
+      return parseJSON(res.body, res.status);
+    } catch {
+      throw new AIError("Couldn't reach the caption server. Check your internet connection and try again in a minute.");
+    }
   }
   // Give the upload an .mp4 name: phones record .mov (same container) which some APIs reject by extension.
   const src = new File(uri);
@@ -81,7 +89,7 @@ export async function transcribe(
     if (!base) throw new AIError('Add your Waxal server URL in Settings, or switch transcription to "This device".');
     const params: Record<string, string> = { provider: s.sttProvider };
     if (lang) params.language = lang;
-    const data = await uploadVideo(`${base}/transcribe`, videoUri, params, serverHeaders(), onProgress);
+    const data = await uploadVideo(`${base}/transcribe`, videoUri, params, serverHeaders(), onProgress, true);
     return { words: toWords(data.words ?? []), language: data.language ?? lang ?? null };
   }
 

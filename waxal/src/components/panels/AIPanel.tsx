@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Row, Sheet, Toggle } from '@/components/Sheet';
+import { TemplateGrid } from '@/components/TemplateGrid';
 import { Chip, GradientButton, Section, Slider, T, tap, type IconName } from '@/components/ui';
 import { AIError, highlightKeywords, LANGUAGES, transcribe, translateCaptions } from '@/lib/ai';
-import { allWords, cutSilences, groupWords, isFiller, retextCaption } from '@/lib/captions';
+import { allWords, cutSilences, groupWords, isFiller, regroup, retextCaption } from '@/lib/captions';
+import type { Template } from '@/lib/templates';
 import { captionsReady, useSettings } from '@/lib/settings';
 import { useEditor } from '@/store/projects';
 import { colors } from '@/theme';
@@ -21,17 +23,26 @@ function errorText(e: unknown) {
   return e instanceof Error ? e.message : String(e);
 }
 
-/** Generate captions with AI. */
+/** Generate captions with AI: pick a template and the spoken language, then generate. */
 export function CaptionsPanel({ onClose }: { onClose: () => void }) {
   const project = useEditor((s) => s.project!);
   const update = useEditor((s) => s.update);
   const settings = useSettings();
   const [lang, setLang] = useState(project.language ?? settings.defaultLanguage ?? 'auto');
+  const [showLangs, setShowLangs] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const hasCaptions = project.captions.length > 0;
   const needsSetup = !captionsReady(settings);
   const engine = settings.sttProvider === 'elevenlabs' ? 'ElevenLabs' : 'OpenAI';
+  const langName = LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
+
+  const pickTemplate = (t: Template) =>
+    update((p) => ({
+      ...p,
+      style: { ...t.style, positionY: p.style.positionY },
+      captions: p.captions.length && t.style.wordsPerLine !== p.style.wordsPerLine ? regroup(p.captions, t.style.wordsPerLine) : p.captions,
+    }));
 
   const run = async () => {
     setBusy(true);
@@ -51,37 +62,55 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const footer = busy ? (
+    <View style={styles.progress}>
+      <ActivityIndicator color={colors.lime} />
+      <T weight="semibold">{progress > 0 && progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Writing captions…'}</T>
+    </View>
+  ) : (
+    <GradientButton icon="sparkles" label={hasCaptions ? 'Apply & regenerate' : 'Generate captions'} onPress={run} disabled={needsSetup} />
+  );
+
   return (
-    <Sheet title="AI Captions" onClose={onClose} maxHeight="60%">
-      <View style={styles.hero}>
-        <Ionicons name="sparkles" size={22} color={colors.lime} />
-        <T style={{ flex: 1, color: colors.textDim, fontSize: 13 }}>
-          Waxal listens to your video and writes word-by-word captions, timed to every word. Engine: {engine}.
-        </T>
-      </View>
+    <Sheet title="Auto captions" onClose={onClose} maxHeight="88%" footer={footer}>
       {needsSetup ? (
         <Pressable onPress={() => router.push('/settings')} style={styles.warn}>
           <Ionicons name="key" size={18} color={colors.warning} />
-          <T style={{ flex: 1, fontSize: 13 }}>{settings.transcribeVia === 'server' ? 'Add your Waxal server URL in Settings to enable AI captions.' : `Add your ${engine} API key in Settings to enable AI captions.`}</T>
+          <T style={{ flex: 1, fontSize: 13 }}>{settings.transcribeVia === 'server' ? 'Add your Waxal server token in Settings to enable AI captions.' : `Add your ${engine} API key in Settings to enable AI captions.`}</T>
           <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
         </Pressable>
       ) : null}
-      <Section title="Spoken language">
-        <Row>
-          {LANGUAGES.map((l) => (
-            <Chip key={l.code} label={l.name} active={lang === l.code} onPress={() => setLang(l.code)} />
-          ))}
-        </Row>
-      </Section>
-      {busy ? (
-        <View style={styles.progress}>
-          <ActivityIndicator color={colors.lime} />
-          <T weight="semibold">{progress > 0 && progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Transcribing…'}</T>
+
+      <Pressable onPress={() => setShowLangs((v) => !v)} style={styles.row}>
+        <Ionicons name="language" size={20} color={colors.text} />
+        <T weight="semibold" style={{ flex: 1, fontSize: 15 }}>
+          Spoken language
+        </T>
+        <T style={{ color: colors.textDim }}>{langName}</T>
+        <Ionicons name={showLangs ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textDim} />
+      </Pressable>
+      {showLangs ? (
+        <View style={{ marginBottom: 14 }}>
+          <Row>
+            {LANGUAGES.map((l) => (
+              <Chip
+                key={l.code}
+                label={l.name}
+                active={lang === l.code}
+                onPress={() => {
+                  setLang(l.code);
+                  setShowLangs(false);
+                }}
+              />
+            ))}
+          </Row>
         </View>
-      ) : (
-        <GradientButton icon="sparkles" label={hasCaptions ? 'Regenerate captions' : 'Generate captions'} onPress={run} disabled={needsSetup} />
-      )}
-      {hasCaptions && !busy ? <T style={{ color: colors.textMute, fontSize: 12, textAlign: 'center', marginTop: 10 }}>Regenerating replaces your current captions (you can undo).</T> : null}
+      ) : null}
+
+      <Section title="Templates">
+        <TemplateGrid selected={project.style.templateId} onSelect={pickTemplate} />
+      </Section>
+      {hasCaptions ? <T style={{ color: colors.textMute, fontSize: 12, textAlign: 'center' }}>Tapping a template restyles your captions right away. Regenerating rewrites the text (you can undo).</T> : null}
     </Sheet>
   );
 }
@@ -208,6 +237,7 @@ function Tool({ icon, title, desc, onPress, loading }: { icon: IconName; title: 
 }
 
 const styles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface2, borderRadius: 16, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: colors.border },
   hero: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: '#17142B', borderRadius: 16, padding: 14, marginBottom: 16 },
   warn: { flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#2A2210', borderRadius: 14, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#4A3B12' },
   progress: { flexDirection: 'row', gap: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, backgroundColor: colors.surface2, borderRadius: 999 },

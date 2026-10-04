@@ -26,7 +26,9 @@ export type Clip = {
 
 export type CaptionAnimation = 'pop' | 'karaoke' | 'bounce' | 'fade' | 'none';
 
-export type FontKey = 'montserrat' | 'anton' | 'bebas' | 'poppins' | 'marker' | 'inter';
+export type FontKey =
+  | 'montserrat' | 'anton' | 'bebas' | 'poppins' | 'marker' | 'inter'
+  | 'playfair' | 'dancing' | 'oswald' | 'bangers' | 'archivo' | 'dmserif' | 'rubik';
 
 export type CaptionStyle = {
   templateId: string;
@@ -46,6 +48,10 @@ export type CaptionStyle = {
   positionY: number;
   wordsPerLine: number;
   shadow: boolean;
+  /** Pill behind the word being spoken (e.g. a purple box). */
+  highlightBg?: string | null;
+  /** Soft colored glow around the letters. */
+  glow?: string | null;
 };
 
 export type TextOverlay = {

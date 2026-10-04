@@ -1,11 +1,10 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Row, Sheet, Toggle } from '@/components/Sheet';
-import { StrokeText } from '@/components/StyledText';
-import { Chip, Section, Slider, Swatches, T, tap } from '@/components/ui';
+import { TemplateGrid } from '@/components/TemplateGrid';
+import { Chip, Section, Slider, Swatches } from '@/components/ui';
 import { regroup } from '@/lib/captions';
 import { FONTS } from '@/lib/fonts';
-import { TEMPLATES } from '@/lib/templates';
 import { useEditor } from '@/store/projects';
 import { colors, SWATCHES } from '@/theme';
 import type { CaptionAnimation, CaptionStyle, FontKey } from '@/types';
@@ -28,29 +27,16 @@ export function StylePanel({ onClose }: { onClose: () => void }) {
   return (
     <Sheet title="Caption style" onClose={onClose} maxHeight="62%">
       <Section title="Templates">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-          {TEMPLATES.map((t) => {
-            const active = style.templateId === t.id;
-            return (
-              <Pressable
-                key={t.id}
-                onPress={() => {
-                  tap();
-                  update((p) => ({ ...p, style: { ...t.style, positionY: p.style.positionY, wordsPerLine: p.style.wordsPerLine } }));
-                }}
-                style={[styles.tpl, active && { borderColor: colors.lime }]}
-              >
-                <View style={{ flexDirection: 'row', gap: 4, backgroundColor: t.style.background ?? 'transparent', paddingHorizontal: 6, borderRadius: 6 }}>
-                  <StrokeText text={t.style.uppercase ? 'HEY' : 'Hey'} stroke={t.style.strokeWidth / 2} strokeColor={t.style.strokeColor} style={{ fontFamily: FONTS[t.style.font].family, fontSize: 17, color: t.style.color }} />
-                  <StrokeText text={t.style.uppercase ? 'YOU' : 'you'} stroke={t.style.strokeWidth / 2} strokeColor={t.style.strokeColor} style={{ fontFamily: FONTS[t.style.font].family, fontSize: 17, color: t.style.highlightColor }} />
-                </View>
-                <T weight="semibold" style={{ fontSize: 11, color: colors.textDim, marginTop: 8 }}>
-                  {t.name}
-                </T>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <TemplateGrid
+          selected={style.templateId}
+          onSelect={(t) =>
+            update((p) => ({
+              ...p,
+              style: { ...t.style, positionY: p.style.positionY },
+              captions: p.captions.length && t.style.wordsPerLine !== p.style.wordsPerLine ? regroup(p.captions, t.style.wordsPerLine) : p.captions,
+            }))
+          }
+        />
       </Section>
 
       <Section title="Font">
@@ -103,6 +89,12 @@ export function StylePanel({ onClose }: { onClose: () => void }) {
         <Swatches colorsList={SWATCHES} value={style.strokeColor} onChange={(c) => c && set({ strokeColor: c })} />
         <View style={{ height: 8 }} />
         <Slider value={style.strokeWidth} min={0} max={8} step={0.5} onStart={checkpoint} onChange={(v) => set({ strokeWidth: v }, false)} format={(v) => `${v}`} />
+      </Section>
+      <Section title="Word box (spoken word)">
+        <Swatches allowNone colorsList={['#7C5CFF', '#FF4FD8', '#FFE600', '#C6FF3D', '#FF4D6A', '#2F6BFF']} value={style.highlightBg ?? null} onChange={(c) => set({ highlightBg: c })} />
+      </Section>
+      <Section title="Glow">
+        <Swatches allowNone colorsList={['#FFC53D', '#FF4FD8', '#00E1FF', '#2F6BFF', '#C6FF3D', '#FF4D6A']} value={style.glow ?? null} onChange={(c) => set({ glow: c })} />
       </Section>
       <Section title="Background box">
         <Swatches allowNone colorsList={['#000000CC', '#FFFFFFE6', '#7C5CFFE6', '#FF4FD8E6', '#FFE600E6', '#2F6BFFE6']} value={style.background} onChange={(c) => set({ background: c })} />

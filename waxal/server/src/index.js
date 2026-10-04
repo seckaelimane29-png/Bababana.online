@@ -31,6 +31,13 @@ for (const [pkg, file] of [
   ['@expo-google-fonts/poppins', '800ExtraBold/Poppins_800ExtraBold.ttf'],
   ['@expo-google-fonts/permanent-marker', '400Regular/PermanentMarker_400Regular.ttf'],
   ['@expo-google-fonts/inter', '800ExtraBold/Inter_800ExtraBold.ttf'],
+  ['@expo-google-fonts/playfair-display', '800ExtraBold_Italic/PlayfairDisplay_800ExtraBold_Italic.ttf'],
+  ['@expo-google-fonts/dancing-script', '700Bold/DancingScript_700Bold.ttf'],
+  ['@expo-google-fonts/oswald', '700Bold/Oswald_700Bold.ttf'],
+  ['@expo-google-fonts/bangers', '400Regular/Bangers_400Regular.ttf'],
+  ['@expo-google-fonts/archivo-black', '400Regular/ArchivoBlack_400Regular.ttf'],
+  ['@expo-google-fonts/dm-serif-display', '400Regular_Italic/DMSerifDisplay_400Regular_Italic.ttf'],
+  ['@expo-google-fonts/rubik', '900Black_Italic/Rubik_900Black_Italic.ttf'],
 ]) {
   const src = path.join(path.dirname(require.resolve(`${pkg}/package.json`)), file);
   copyFileSync(src, path.join(FONTS, path.basename(file)));

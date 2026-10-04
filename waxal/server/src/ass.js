@@ -54,6 +54,8 @@ export function buildASS(project, W, H) {
     '[V4+ Styles]',
     'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
     `Style: Cap,${style.fontFamily},${fs},${assColor(style.color)},${assColor(style.highlightColor)},${box ? assColor(style.background) : assColor(style.strokeColor)},&H80000000,0,0,0,0,100,100,0,0,${box ? 3 : 1},${box ? Math.round(fs * 0.22) : outline},${box ? 0 : shadow},5,${margin},${margin},0,1`,
+    // Layer for the pill behind the spoken word: opaque box, text itself hidden.
+    `Style: CapBox,${style.fontFamily},${fs},&HFF000000,&HFF000000,&H00000000,&HFF000000,0,0,0,0,100,100,0,0,3,${Math.round(fs * 0.12)},0,5,${margin},${margin},0,1`,
     `Style: Txt,Montserrat Black,${Math.round(0.07 * W * SIZE_FACTOR)},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,${(3 * scale).toFixed(1)},0,5,${margin},${margin},0,1`,
     `Style: TxtBox,Montserrat Black,${Math.round(0.07 * W * SIZE_FACTOR)},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,3,10,0,5,${margin},${margin},0,1`,
     '',
@@ -97,9 +99,26 @@ export function buildASS(project, W, H) {
           return `{${tags}}${t}{\\fscx100\\fscy100}`;
         })
         .join(' ');
+      // Same words with every glyph invisible except the spoken word's box.
+      const boxLine = style.highlightBg && seg.active >= 0
+        ? words
+            .map((w, i) => {
+              let t = esc(String(w.text).replace(EMOJI, '').trim());
+              if (style.uppercase) t = t.toUpperCase();
+              const on = i === seg.active;
+              return `{\\3c${assColor(on ? style.highlightBg : '#000000')}\\3a&H${on ? '00' : 'FF'}&}${t}`;
+            })
+            .join(' ')
+        : null;
       for (const r of sourceRangeToTimeline(project.clips, seg.start, seg.end)) {
         const fade = anim === 'fade' && first ? '\\fad(150,0)' : '';
-        events.push(`Dialogue: 0,${ts(r.start)},${ts(r.end)},Cap,,0,0,0,,{\\an5\\pos(${x},${y})${fade}}${line}`);
+        const at = `{\\an5\\pos(${x},${y})${fade}}`;
+        if (style.glow) {
+          // Blurred, thick outline in the glow color under the text.
+          events.push(`Dialogue: 0,${ts(r.start)},${ts(r.end)},Cap,,0,0,0,,${at}{\\1a&HFF&\\3c${assColor(style.glow)}\\bord${Math.round(fs * 0.18)}\\blur${Math.round(fs * 0.25)}\\shad0}${line}`);
+        }
+        if (boxLine) events.push(`Dialogue: 1,${ts(r.start)},${ts(r.end)},CapBox,,0,0,0,,${at}${boxLine}`);
+        events.push(`Dialogue: 2,${ts(r.start)},${ts(r.end)},Cap,,0,0,0,,${at}${line}`);
       }
       first = false;
     }
@@ -116,7 +135,7 @@ export function buildASS(project, W, H) {
       ? `{${pos}\\fn${family}\\fs${size}\\1c${assColor(t.color)}\\3c${assColor(t.background)}\\bord${Math.round(size * 0.25)}}`
       : `{${pos}\\fn${family}\\fs${size}\\1c${assColor(t.color)}\\3c${assColor(t.strokeColor || '#000000')}\\bord${t.strokeColor ? (3 * scale).toFixed(1) : 0}}`;
     for (const r of sourceRangeToTimeline(project.clips, t.start, t.end)) {
-      events.push(`Dialogue: 1,${ts(r.start)},${ts(r.end)},${t.background ? 'TxtBox' : 'Txt'},,0,0,0,,${tags}${text}`);
+      events.push(`Dialogue: 3,${ts(r.start)},${ts(r.end)},${t.background ? 'TxtBox' : 'Txt'},,0,0,0,,${tags}${text}`);
     }
   }
 

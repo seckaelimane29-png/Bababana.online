@@ -28,6 +28,25 @@ export function CaptionOverlay({ captions, style, width, height, preview }: Prop
   return <CaptionLine key={caption.id} caption={caption} active={active} style={style} width={width} height={height} />;
 }
 
+const SAMPLE_WORDS = ['The', 'quick', 'brown', 'fox'];
+
+/** Static preview of a caption style (used by the template picker). */
+export function CaptionSample({ style, width, height }: { style: CaptionStyle; width: number; height: number }) {
+  const caption: Caption = {
+    id: 'sample',
+    start: 0,
+    end: 4,
+    words: SAMPLE_WORDS.slice(0, Math.max(2, Math.min(3, style.wordsPerLine))).map((text, i) => ({ id: `s${i}`, text, start: i, end: i + 1 })),
+  };
+  // Tiles are small, so scale the type up and center it.
+  const sampleStyle = { ...style, positionY: 0.5, size: Math.min(0.16, style.size * 1.75) };
+  return (
+    <View style={{ width, height }} pointerEvents="none">
+      <CaptionLine caption={caption} active={1} style={sampleStyle} width={width} height={height} />
+    </View>
+  );
+}
+
 function CaptionLine({ caption, active, style, width, height }: { caption: Caption; active: number; style: CaptionStyle; width: number; height: number }) {
   const fontSize = Math.max(10, style.size * width);
   const stroke = (style.strokeWidth * width) / 1080;
@@ -121,10 +140,19 @@ function CaptionWord({ word, index, active, style, lineStyle, stroke }: { word: 
   if (style.animation === 'karaoke' ? spoken : isActive && style.animation !== 'none') color = style.highlightColor;
   const text = style.uppercase ? word.text.toUpperCase() : word.text;
   const fontSize = (lineStyle as { fontSize: number }).fontSize;
+  const boxed = isActive && !!style.highlightBg;
+  const glow = style.glow ? { textShadowColor: style.glow, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: fontSize * 0.45 } : null;
 
   return (
-    <Animated.View style={{ transform: [{ scale }, { translateY: Animated.multiply(lift, fontSize * 0.25) }] }}>
-      <StrokeText text={text} stroke={stroke} strokeColor={style.strokeColor} style={{ ...lineStyle, color }} />
+    <Animated.View
+      style={{
+        transform: [{ scale }, { translateY: Animated.multiply(lift, fontSize * 0.25) }],
+        backgroundColor: boxed ? style.highlightBg! : 'transparent',
+        borderRadius: fontSize * 0.22,
+        paddingHorizontal: style.highlightBg ? fontSize * 0.14 : 0,
+      }}
+    >
+      <StrokeText text={text} stroke={stroke} strokeColor={style.strokeColor} style={{ ...lineStyle, ...glow, color }} />
     </Animated.View>
   );
 }

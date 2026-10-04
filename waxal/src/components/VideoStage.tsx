@@ -27,7 +27,8 @@ export function VideoStage({ player, width, height, onTogglePlay, onEditText }: 
     <View style={[styles.stage, { width, height }]}>
       <VideoView
         player={player}
-        style={StyleSheet.absoluteFill}
+        // Explicit size: a web <video> ignores left/right/bottom and grows to the video's own size otherwise.
+        style={{ position: 'absolute', top: 0, left: 0, width, height }}
         contentFit="contain"
         nativeControls={false}
         // iPhone Safari: play inside the page instead of jumping to fullscreen.
@@ -159,7 +160,7 @@ function TextOverlayView({ overlay, width, height, onEdit }: { overlay: TextOver
 
 const styles = StyleSheet.create({
   // iPhone Safari draws a blank video inside a rounded, clipped box (audio still plays), so skip rounding on web.
-  stage: Platform.OS === 'web' ? { backgroundColor: '#000' } : { backgroundColor: '#000', borderRadius: 18, overflow: 'hidden' },
+  stage: Platform.OS === 'web' ? { backgroundColor: '#000', overflow: 'hidden' } : { backgroundColor: '#000', borderRadius: 18, overflow: 'hidden' },
   playBadge: {
     position: 'absolute',
     alignSelf: 'center',

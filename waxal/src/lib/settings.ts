@@ -76,16 +76,24 @@ export const useSettings = create<SettingsState>((set, get) => ({
 }));
 
 /** True when AI captions can run with the current settings. */
+/**
+ * Built-in server settings, set by the app owner at build time (Vercel / EAS environment variables),
+ * so end users never have to see or type them.
+ */
+const BUILT_IN_SERVER_URL = process.env.EXPO_PUBLIC_WAXAL_SERVER_URL || 'https://waxal-server.onrender.com';
+const BUILT_IN_TOKEN = process.env.EXPO_PUBLIC_WAXAL_TOKEN || '';
+
+/** True when AI captions can run with the current settings. */
 export function captionsReady(s: Settings): boolean {
-  if (s.transcribeVia === 'server') return !!s.serverUrl;
+  if (s.transcribeVia === 'server') return !!(s.serverUrl.trim() || BUILT_IN_SERVER_URL);
   return s.sttProvider === 'elevenlabs' ? !!s.elevenlabsKey : !!s.openaiKey;
 }
 
 export function serverBase(): string {
-  return useSettings.getState().serverUrl.trim().replace(/\/+$/, '');
+  return (useSettings.getState().serverUrl.trim() || BUILT_IN_SERVER_URL).replace(/\/+$/, '');
 }
 
 export function serverHeaders(): Record<string, string> {
-  const token = useSettings.getState().serverToken.trim();
+  const token = useSettings.getState().serverToken.trim() || BUILT_IN_TOKEN;
   return token ? { 'x-waxal-token': token } : {};
 }

@@ -16,6 +16,8 @@ const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY || '';
 const TOKEN = process.env.WAXAL_API_TOKEN || '';
 const CHAT_MODEL = process.env.WAXAL_CHAT_MODEL || '';
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 1024);
+// Per-visitor cap on the paid endpoints (captions, AI, renders) so a leaked token can't drain your credit.
+const RATE_LIMIT_PER_HOUR = Number(process.env.RATE_LIMIT_PER_HOUR || 40);
 const ROOT = path.join(os.tmpdir(), 'waxal');
 const UPLOADS = path.join(ROOT, 'uploads');
 const JOBS = path.join(ROOT, 'jobs');
@@ -44,6 +46,7 @@ for (const [pkg, file] of [
 }
 
 const app = express();
+app.set('trust proxy', true); // Render sits behind a proxy; use the visitor's real IP.
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 const upload = multer({ dest: UPLOADS, limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024, fieldSize: 20 * 1024 * 1024 } });
@@ -54,6 +57,25 @@ app.use((req, res, next) => {
   if (header === TOKEN || req.query.token === TOKEN) return next();
   res.status(401).json({ error: 'Invalid or missing server token' });
 });
+
+/** @type {Map<string, number[]>} */
+const hits = new Map();
+function rateLimit(req, res, next) {
+  const now = Date.now();
+  const key = req.ip || 'unknown';
+  const recent = (hits.get(key) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (recent.length >= RATE_LIMIT_PER_HOUR) {
+    res.set('Retry-After', '600');
+    return res.status(429).json({ error: 'Too many requests. Please wait a few minutes and try again.' });
+  }
+  recent.push(now);
+  hits.set(key, recent);
+  next();
+}
+setInterval(() => {
+  const cutoff = Date.now() - 60 * 60 * 1000;
+  for (const [k, list] of hits) if (!list.some((t) => t > cutoff)) hits.delete(k);
+}, 10 * 60 * 1000).unref();
 
 app.get('/health', (_req, res) => res.json({ ok: true, openai: !!OPENAI_KEY, elevenlabs: !!ELEVENLABS_KEY }));
 
@@ -96,7 +118,7 @@ async function transcribeOpenAI(mp3, language) {
   return { words: data.words || [], language: data.language || null, text: data.text };
 }
 
-app.post('/transcribe', upload.single('file'), async (req, res) => {
+app.post('/transcribe', rateLimit, upload.single('file'), async (req, res) => {
   const file = req.file;
   const mp3 = file ? `${file.path}.mp3` : null;
   try {
@@ -117,7 +139,7 @@ app.post('/transcribe', upload.single('file'), async (req, res) => {
   }
 });
 
-app.post('/ai/chat', async (req, res) => {
+app.post('/ai/chat', rateLimit, async (req, res) => {
   try {
     if (!OPENAI_KEY) return res.status(500).json({ error: 'Server has no OPENAI_API_KEY configured' });
     const { model, messages, response_format } = req.body || {};
@@ -168,7 +190,7 @@ async function pump() {
   }
 }
 
-app.post('/render', upload.single('file'), (req, res) => {
+app.post('/render', rateLimit, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   let project;
   try {

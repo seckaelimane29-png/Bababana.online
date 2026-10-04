@@ -127,7 +127,7 @@ export default function Home() {
             {!hasKey ? (
               <Pressable onPress={() => router.push('/settings')} style={styles.keyCard}>
                 <Ionicons name="key" size={18} color={colors.warning} />
-                <T style={{ flex: 1, fontSize: 13 }}>Add your ElevenLabs API key in Settings to turn on AI captions.</T>
+                <T style={{ flex: 1, fontSize: 13 }}>AI captions are not set up yet.</T>
                 <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
               </Pressable>
             ) : null}

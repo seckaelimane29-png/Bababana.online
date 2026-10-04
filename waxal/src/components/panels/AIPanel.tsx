@@ -76,7 +76,7 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
       {needsSetup ? (
         <Pressable onPress={() => router.push('/settings')} style={styles.warn}>
           <Ionicons name="key" size={18} color={colors.warning} />
-          <T style={{ flex: 1, fontSize: 13 }}>{settings.transcribeVia === 'server' ? 'Add your Waxal server token in Settings to enable AI captions.' : `Add your ${engine} API key in Settings to enable AI captions.`}</T>
+          <T style={{ flex: 1, fontSize: 13 }}>AI captions are not set up yet. Please try again later.</T>
           <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
         </Pressable>
       ) : null}

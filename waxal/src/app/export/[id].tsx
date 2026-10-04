@@ -10,7 +10,7 @@ import { Row, Toggle } from '@/components/Sheet';
 import { Chip, GradientButton, IconButton, Section, SoftButton, T } from '@/components/ui';
 import { toPlainText, toSRT, toVTT } from '@/lib/captions';
 import { renderVideo, type RenderOptions, type RenderStage } from '@/lib/render';
-import { useSettings } from '@/lib/settings';
+import { serverBase, useSettings } from '@/lib/settings';
 import { formatTime, timelineDuration } from '@/lib/timeline';
 import { loadProject } from '@/store/projects';
 import { colors } from '@/theme';
@@ -31,7 +31,7 @@ function alertMsg(title: string, msg: string) {
 export default function ExportScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const serverUrl = useSettings((s) => s.serverUrl);
+  const serverUrl = useSettings((s) => (s.loaded ? serverBase() : ''));
   const [project, setProject] = useState<Project | null>(null);
   const [opts, setOpts] = useState<RenderOptions>({ quality: '1080', burnCaptions: true });
   const [stage, setStage] = useState<RenderStage | null>(null);

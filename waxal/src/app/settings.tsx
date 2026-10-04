@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Row } from '@/components/Sheet';
@@ -23,6 +23,7 @@ export default function SettingsScreen() {
   const [via, setVia] = useState(s.transcribeVia);
   const [lang, setLang] = useState(s.defaultLanguage);
   const [showKey, setShowKey] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
   const [check, setCheck] = useState<'idle' | 'busy' | 'ok' | 'fail'>('idle');
 
   const testServer = async () => {
@@ -44,12 +45,29 @@ export default function SettingsScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={styles.top}>
         <IconButton icon="close" onPress={() => router.back()} label="Close" />
-        <T weight="bold" style={{ fontSize: 17 }}>
-          Settings
-        </T>
+        {/* Owner-only: long-press the title for 2 seconds to reveal server and API settings. */}
+        <Pressable delayLongPress={2000} onLongPress={() => setAdvanced((v) => !v)} hitSlop={12}>
+          <T weight="bold" style={{ fontSize: 17 }}>
+            Settings
+          </T>
+        </Pressable>
         <View style={{ width: 40 }} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: insets.bottom + 30, maxWidth: 640, width: '100%', alignSelf: 'center' }} keyboardShouldPersistTaps="handled">
+        <Section title="Default spoken language">
+          <Row>
+            {LANGUAGES.map((l) => (
+              <Chip key={l.code} label={l.name} active={lang === l.code} onPress={() => setLang(l.code)} />
+            ))}
+          </Row>
+        </Section>
+
+
+        {advanced ? (
+          <View style={styles.advanced}>
+            <T weight="bold" style={{ color: colors.warning, marginBottom: 14 }}>
+              Owner settings (hidden from users)
+            </T>
         <Section title="Caption engine">
           <Row>
             <Chip label="ElevenLabs (Wolof)" active={provider === 'elevenlabs'} onPress={() => setProvider('elevenlabs')} />
@@ -114,17 +132,12 @@ export default function SettingsScreen() {
           <T style={styles.hint}>The server (in the /server folder) renders your final MP4 with ffmpeg: cuts, speed, volume and burned-in animated captions.</T>
         </Section>
 
-        <Section title="Default spoken language">
-          <Row>
-            {LANGUAGES.map((l) => (
-              <Chip key={l.code} label={l.name} active={lang === l.code} onPress={() => setLang(l.code)} />
-            ))}
-          </Row>
-        </Section>
-
         <Section title="AI model (translate & highlight)">
           <TextInput value={model} onChangeText={setModel} autoCapitalize="none" autoCorrect={false} style={[styles.input, styles.box]} placeholderTextColor={colors.textMute} />
         </Section>
+
+          </View>
+        ) : null}
 
         <GradientButton label="Save" icon="checkmark" onPress={save} style={{ marginTop: 8 }} />
       </ScrollView>
@@ -138,5 +151,6 @@ const styles = StyleSheet.create({
   inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface2, borderRadius: 14, borderWidth: 1, borderColor: colors.border, paddingRight: 4 },
   input: { flex: 1, color: colors.text, fontSize: 15, paddingHorizontal: 14, paddingVertical: 14 },
   box: { backgroundColor: colors.surface2, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
+  advanced: { marginTop: 10, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: '#4A3B12', backgroundColor: '#15120A' },
   hint: { color: colors.textMute, fontSize: 12, marginTop: 8, lineHeight: 17 },
 });

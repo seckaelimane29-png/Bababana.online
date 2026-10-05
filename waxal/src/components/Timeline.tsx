@@ -31,6 +31,13 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
   const scroll = useRef<ScrollView>(null);
   const userScrolling = useRef(false);
   const momentum = useRef(false);
+  // Where the app itself last scrolled to. Any other scroll position came from the user's finger.
+  // (The web build never fires onScrollBeginDrag, so this is what makes scrubbing work there.)
+  const autoX = useRef(0);
+  const scrollTo = (x: number) => {
+    autoX.current = x;
+    scroll.current?.scrollTo({ x, animated: false });
+  };
   const total = timelineDuration(project.clips);
   const half = width / 2;
   const offsets = useMemo(() => clipOffsets(project.clips), [project.clips]);
@@ -39,18 +46,23 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
   useEffect(() => {
     return usePlayback.subscribe((s, prev) => {
       if (s.timelineTime === prev.timelineTime || userScrolling.current || momentum.current) return;
-      scroll.current?.scrollTo({ x: s.timelineTime * pps, animated: false });
+      scrollTo(s.timelineTime * pps);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pps]);
 
   useEffect(() => {
-    scroll.current?.scrollTo({ x: usePlayback.getState().timelineTime * pps, animated: false });
+    scrollTo(usePlayback.getState().timelineTime * pps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pps]);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!userScrolling.current && !momentum.current) return;
-    const t = Math.min(total, Math.max(0, e.nativeEvent.contentOffset.x / pps));
-    onSeek(t);
+    const x = e.nativeEvent.contentOffset.x;
+    const byUser = userScrolling.current || momentum.current || Math.abs(x - autoX.current) > 2;
+    if (!byUser) return;
+    if (usePlayback.getState().playing) onScrubStart();
+    autoX.current = x;
+    onSeek(Math.min(total, Math.max(0, x / pps)));
   };
 
   const captionBlocks = useMemo(

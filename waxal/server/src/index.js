@@ -90,13 +90,19 @@ async function readJson(r) {
   }
 }
 
+// ElevenLabs takes ISO 639-1 or 639-3; send 639-3, which is how they list Wolof and Fula.
+const ISO3 = {
+  wo: 'wol', ff: 'ful', fr: 'fra', en: 'eng', ar: 'ara', es: 'spa', pt: 'por', de: 'deu', it: 'ita', tr: 'tur',
+  ru: 'rus', hi: 'hin', zh: 'cmn', ja: 'jpn', ko: 'kor', nl: 'nld', pl: 'pol', id: 'ind', sw: 'swa',
+};
+
 async function transcribeElevenLabs(mp3, language) {
   const form = new FormData();
   form.append('file', new Blob([await readFile(mp3)], { type: 'audio/mpeg' }), 'audio.mp3');
   form.append('model_id', 'scribe_v2');
   form.append('timestamps_granularity', 'word');
   form.append('tag_audio_events', 'false');
-  if (language) form.append('language_code', language);
+  if (language) form.append('language_code', ISO3[language] || language);
   const r = await fetch('https://api.elevenlabs.io/v1/speech-to-text', { method: 'POST', headers: { 'xi-api-key': ELEVENLABS_KEY }, body: form });
   const data = await readJson(r);
   if (!r.ok) throw Object.assign(new Error(data?.detail?.message || data?.detail || 'Transcription failed'), { status: r.status });

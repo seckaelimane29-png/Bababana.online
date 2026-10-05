@@ -27,7 +27,8 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
   const project = useEditor((s) => s.project!);
   const update = useEditor((s) => s.update);
   const settings = useSettings();
-  const [lang, setLang] = useState(project.language ?? settings.defaultLanguage ?? 'auto');
+  // Start from the user's last choice (Wolof by default), not the language auto-detect guessed last time.
+  const [lang, setLang] = useState(settings.defaultLanguage || 'wo');
   const [showLangs, setShowLangs] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -90,6 +91,7 @@ export function CaptionsPanel({ onClose }: { onClose: () => void }) {
                 onPress={() => {
                   setLang(l.code);
                   setShowLangs(false);
+                  settings.save({ defaultLanguage: l.code }); // remember for next time
                 }}
               />
             ))}

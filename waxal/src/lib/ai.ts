@@ -100,7 +100,7 @@ export async function transcribe(
       timestamps_granularity: 'word',
       tag_audio_events: 'false',
     };
-    if (lang) params.language_code = lang;
+    if (lang) params.language_code = ISO3[lang] ?? lang;
     const data = await uploadVideo(`${ELEVENLABS}/speech-to-text`, videoUri, params, { 'xi-api-key': s.elevenlabsKey }, onProgress);
     return { words: elevenWords(data), language: data.language_code ?? lang ?? null };
   }
@@ -222,6 +222,12 @@ export const LANGUAGES: { code: string; name: string }[] = [
   { code: 'sw', name: 'Swahili' },
   { code: 'ff', name: 'Fula' },
 ];
+
+/** ElevenLabs takes ISO 639-1 or 639-3 codes; send 639-3, which is how they list Wolof and Fula. */
+const ISO3: Record<string, string> = {
+  wo: 'wol', ff: 'ful', fr: 'fra', en: 'eng', ar: 'ara', es: 'spa', pt: 'por', de: 'deu', it: 'ita', tr: 'tur',
+  ru: 'rus', hi: 'hin', zh: 'cmn', ja: 'jpn', ko: 'kor', nl: 'nld', pl: 'pol', id: 'ind', sw: 'swa',
+};
 
 /** Languages in the list above that OpenAI Whisper accepts (Wolof and Fula are not among them). */
 const OPENAI_LANGS = new Set(['en', 'fr', 'ar', 'es', 'pt', 'de', 'it', 'tr', 'ru', 'hi', 'zh', 'ja', 'ko', 'nl', 'pl', 'id', 'sw']);

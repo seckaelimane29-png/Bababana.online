@@ -29,7 +29,7 @@ const DEFAULTS: Settings = {
   serverToken: '',
   transcribeVia: 'server',
   chatModel: 'gpt-4o-mini',
-  defaultLanguage: 'auto',
+  defaultLanguage: 'wo', // Waxal is built for Wolof speakers first
 };
 
 const SECRETS = { openaiKey: 'waxal.openaiKey', elevenlabsKey: 'waxal.elevenlabsKey' } as const;
@@ -62,7 +62,10 @@ export const useSettings = create<SettingsState>((set, get) => ({
   loaded: false,
   load: async () => {
     const [raw, openaiKey, elevenlabsKey] = await Promise.all([AsyncStorage.getItem(SETTINGS_STORE), readSecret('openaiKey'), readSecret('elevenlabsKey')]);
-    const stored = raw ? (JSON.parse(raw) as Partial<Settings>) : {};
+    const stored = raw ? (JSON.parse(raw) as Partial<Settings> & { langV2?: boolean }) : {};
+    // One-time move from the old "Auto-detect" default to Wolof.
+    if (!stored.langV2 && (!stored.defaultLanguage || stored.defaultLanguage === 'auto')) stored.defaultLanguage = 'wo';
+    stored.langV2 = true;
     set({ ...DEFAULTS, ...stored, openaiKey, elevenlabsKey, loaded: true });
   },
   save: async (patch) => {

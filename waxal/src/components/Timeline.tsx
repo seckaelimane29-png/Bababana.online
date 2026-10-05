@@ -34,6 +34,10 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
   // Where the app itself last scrolled to. Any other scroll position came from the user's finger.
   // (The web build never fires onScrollBeginDrag, so this is what makes scrubbing work there.)
   const autoX = useRef(0);
+  // Finger on the timeline (and a short grace period for the fling after lifting it).
+  const touching = useRef(false);
+  const touchEndAt = useRef(0);
+  const fingerActive = () => touching.current || Date.now() - touchEndAt.current < 700;
   const scrollTo = (x: number) => {
     autoX.current = x;
     scroll.current?.scrollTo({ x, animated: false });
@@ -45,7 +49,7 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
   // Follow the playhead while playing / after programmatic seeks.
   useEffect(() => {
     return usePlayback.subscribe((s, prev) => {
-      if (s.timelineTime === prev.timelineTime || userScrolling.current || momentum.current) return;
+      if (s.timelineTime === prev.timelineTime || userScrolling.current || momentum.current || fingerActive()) return;
       scrollTo(s.timelineTime * pps);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +62,9 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
-    const byUser = userScrolling.current || momentum.current || Math.abs(x - autoX.current) > 2;
+    const playing = usePlayback.getState().playing;
+    // While playing, only a real touch counts: our own follow-scroll events can arrive a few frames late.
+    const byUser = userScrolling.current || momentum.current || fingerActive() || (!playing && Math.abs(x - autoX.current) > 2);
     if (!byUser) return;
     if (usePlayback.getState().playing) onScrubStart();
     autoX.current = x;
@@ -96,6 +102,17 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={onScroll}
+          onTouchStart={() => {
+            touching.current = true;
+          }}
+          onTouchEnd={() => {
+            touching.current = false;
+            touchEndAt.current = Date.now();
+          }}
+          onTouchCancel={() => {
+            touching.current = false;
+            touchEndAt.current = Date.now();
+          }}
           onScrollBeginDrag={() => {
             userScrolling.current = true;
             onScrubStart();

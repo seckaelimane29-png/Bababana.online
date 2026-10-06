@@ -67,3 +67,38 @@ export function postForm(url: string, form: FormData, headers: Record<string, st
     xhr.send(form);
   });
 }
+
+/** Send a big file in small pieces (iPhone Safari fails on one huge upload). Returns the server's upload id. */
+export async function uploadInChunks(base: string, blob: Blob, headers: Record<string, string>, onProgress?: (p: number) => void): Promise<string> {
+  const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `u${Date.now()}${Math.random().toString(36).slice(2)}`;
+  const size = 2 * 1024 * 1024;
+  for (let offset = 0; offset < blob.size || offset === 0; offset += size) {
+    const piece = blob.slice(offset, offset + size);
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await sendChunk(`${base}/upload/${id}/chunk?offset=${offset}`, piece, headers);
+        if (res.status >= 400) throw new Error(`Upload failed (${res.status}): ${res.body.slice(0, 200)}`);
+        break;
+      } catch (e) {
+        if (attempt >= 3) throw e; // a phone connection blips; retry the same piece a few times
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+    onProgress?.(Math.min(1, (offset + piece.size) / Math.max(1, blob.size)));
+    if (blob.size === 0) break;
+  }
+  return id;
+}
+
+function sendChunk(url: string, piece: Blob, headers: Record<string, string>): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.onload = () => resolve({ status: xhr.status, body: xhr.responseText });
+    xhr.onerror = () => reject(new TypeError('Load failed'));
+    xhr.ontimeout = () => reject(new TypeError('Load failed'));
+    xhr.send(piece);
+  });
+}

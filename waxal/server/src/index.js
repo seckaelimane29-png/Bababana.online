@@ -3,7 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { readFile, rm } from 'node:fs/promises';
+import { appendFile, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
@@ -239,7 +239,37 @@ async function pump() {
   }
 }
 
+// Chunked uploads: iPhone Safari fails ("Load failed") on one big multipart upload of a phone video,
+// so the browser sends the file in small pieces, then refers to it by uploadId.
+const chunkPath = (id) => path.join(UPLOADS, `chunked-${id}`);
+app.post('/upload/:id/chunk', express.raw({ type: () => true, limit: '12mb' }), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!/^[a-zA-Z0-9-]{8,64}$/.test(id)) return res.status(400).json({ error: 'Bad upload id' });
+    const offset = Number(req.query.offset || 0);
+    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const file = chunkPath(id);
+    const size = existsSync(file) ? (await stat(file)).size : 0;
+    if (offset === 0) await writeFile(file, body);
+    else if (size === offset) await appendFile(file, body);
+    else if (size !== offset + body.length) return res.status(409).json({ error: 'Chunk out of order', size });
+    // (size === offset + length means this chunk was a retry that already landed.)
+    const total = (await stat(file)).size;
+    if (total > MAX_UPLOAD_MB * 1024 * 1024) {
+      await rm(file, { force: true });
+      return res.status(413).json({ error: 'Video too large' });
+    }
+    res.json({ size: total });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
 app.post('/render', rateLimit, upload.single('file'), (req, res) => {
+  const uploadId = req.body.uploadId ? String(req.body.uploadId) : '';
+  if (!req.file && uploadId && /^[a-zA-Z0-9-]{8,64}$/.test(uploadId) && existsSync(chunkPath(uploadId))) {
+    req.file = { path: chunkPath(uploadId) };
+  }
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   let project;
   try {

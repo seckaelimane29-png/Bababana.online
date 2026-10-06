@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
 import { serverBase, serverHeaders } from '@/lib/settings';
+import { uploadInChunks } from '@/lib/webAudio';
 import type { Project } from '@/types';
 
 export type RenderStage = { stage: 'upload' | 'render' | 'download' | 'done'; progress: number };
@@ -35,11 +36,17 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
   let job: { id: string };
   if (Platform.OS === 'web') {
     const blob = await (await fetch(p.videoUri)).blob();
+    let uploadId: string;
+    try {
+      uploadId = await uploadInChunks(base, blob, serverHeaders(), (progress) => onStage({ stage: 'upload', progress }));
+    } catch {
+      throw new Error("Couldn't upload the video. Check your internet connection and try again.");
+    }
     const form = new FormData();
-    form.append('file', blob, 'video.mp4');
+    form.append('uploadId', uploadId);
     form.append('project', payload(p, opts));
     const res = await fetch(`${base}/render`, { method: 'POST', body: form, headers: serverHeaders() });
-    if (!res.ok) throw new Error(`Upload failed (${res.status}): ${await res.text()}`);
+    if (!res.ok) throw new Error(`Export failed (${res.status}): ${await res.text()}`);
     job = await res.json();
   } else {
     const res = await new File(p.videoUri).upload(`${base}/render`, {

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import { uid } from '@/lib/id';
 import { serverBase, serverHeaders, useSettings } from '@/lib/settings';
-import { extractAudioWav, postForm } from '@/lib/webAudio';
+import { postForm, uploadInChunks } from '@/lib/webAudio';
 import type { Caption, Word } from '@/types';
 
 const OPENAI = 'https://api.openai.com/v1';
@@ -38,15 +38,24 @@ async function uploadVideo(
   params: Record<string, string>,
   headers: Record<string, string>,
   onProgress?: (p: number) => void,
-  audioOnly = false,
+  toServer = false,
 ): Promise<any> {
   if (Platform.OS === 'web') {
-    // Send only the audio when the browser can extract it (a few MB instead of the whole video).
-    const audio = audioOnly ? await extractAudioWav(uri) : null;
-    const blob = audio ?? (await (await fetch(uri)).blob());
     const form = new FormData();
-    form.append('file', blob, audio ? 'audio.wav' : 'video.mp4');
     Object.entries(params).forEach(([k, v]) => form.append(k, v));
+    if (toServer) {
+      // Send the whole video in small pieces and let the server pull the audio out with ffmpeg:
+      // the browser's audio decoder ignores the start trim of videos cut in the Photos app,
+      // which shifted every caption by the trimmed seconds.
+      const blob = await (await fetch(uri)).blob();
+      try {
+        form.append('uploadId', await uploadInChunks(url.replace(/\/transcribe.*$/, ''), blob, headers, onProgress));
+      } catch {
+        throw new AIError("Couldn't reach the caption server. Check your internet connection and try again in a minute.");
+      }
+    } else {
+      form.append('file', await (await fetch(uri)).blob(), 'video.mp4');
+    }
     try {
       const res = await postForm(url, form, headers, onProgress);
       return parseJSON(res.body, res.status);

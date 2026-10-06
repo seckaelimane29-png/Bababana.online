@@ -5,6 +5,7 @@ import { create } from 'zustand';
 
 import { uid } from '@/lib/id';
 import { DEFAULT_STYLE } from '@/lib/templates';
+import { copyVideo, deleteVideo, saveVideo, videoUrl } from '@/lib/webVideoStore';
 import type { Project, Selection } from '@/types';
 
 const INDEX_KEY = 'waxal.projects';
@@ -59,7 +60,10 @@ async function saveProject(p: Project) {
 
 /** Copy the picked video into app storage so it survives picker cache cleanup. */
 async function importVideo(uri: string, id: string): Promise<string> {
-  if (Platform.OS === 'web') return uri;
+  if (Platform.OS === 'web') {
+    await saveVideo(id, uri);
+    return uri;
+  }
   const dir = new Directory(Paths.document, 'videos');
   if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
   const ext = (uri.split('?')[0].split('.').pop() || 'mp4').toLowerCase().slice(0, 4);
@@ -103,6 +107,7 @@ export const useLibrary = create<LibraryState>((set, get) => ({
   },
   remove: async (id) => {
     const p = await loadProject(id);
+    if (Platform.OS === 'web') await deleteVideo(id);
     if (p && Platform.OS !== 'web') {
       try {
         const f = new File(p.videoUri);
@@ -124,7 +129,8 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     if (!p) return;
     const nid = uid('p');
     let videoUri = p.videoUri;
-    if (Platform.OS !== 'web') {
+    if (Platform.OS === 'web') await copyVideo(id, nid);
+    else {
       const dest = new File(new Directory(Paths.document, 'videos'), `${nid}.${p.videoUri.split('.').pop()}`);
       await new File(p.videoUri).copy(dest);
       videoUri = dest.uri;
@@ -162,7 +168,11 @@ export const useEditor = create<EditorState>((set, get) => ({
   future: [],
   selection: null,
   open: async (id) => {
-    const p = await loadProject(id);
+    let p = await loadProject(id);
+    if (p && Platform.OS === 'web') {
+      const url = await videoUrl(id);
+      if (url) p = { ...p, videoUri: url };
+    }
     set({ project: p, past: [], future: [], selection: null });
     return !!p;
   },

@@ -127,7 +127,18 @@ async function transcribeOpenAI(mp3, language) {
   return { words: data.words || [], language: data.language || null, text: data.text };
 }
 
-app.post('/transcribe', rateLimit, upload.single('file'), async (req, res) => {
+// Chunked uploads: iPhone Safari fails ("Load failed") on one big multipart upload of a phone video,
+// so the browser sends the file in small pieces (/upload/:id/chunk), then refers to it by uploadId.
+const chunkPath = (id) => path.join(UPLOADS, `chunked-${id}`);
+function useChunkedUpload(req, _res, next) {
+  const uploadId = req.body?.uploadId ? String(req.body.uploadId) : '';
+  if (!req.file && /^[a-zA-Z0-9-]{8,64}$/.test(uploadId) && existsSync(chunkPath(uploadId))) {
+    req.file = { path: chunkPath(uploadId) };
+  }
+  next();
+}
+
+app.post('/transcribe', rateLimit, upload.single('file'), useChunkedUpload, async (req, res) => {
   const file = req.file;
   const audio = file ? `${file.path}.audio` : null;
   try {
@@ -161,7 +172,7 @@ const COMPARE_SETUPS = [
   { label: 'Model v2 · auto-detect', model: 'scribe_v2', forceLanguage: false },
   { label: 'Model v2 · forced language', model: 'scribe_v2', forceLanguage: true },
 ];
-app.post('/transcribe/compare', rateLimit, upload.single('file'), async (req, res) => {
+app.post('/transcribe/compare', rateLimit, upload.single('file'), useChunkedUpload, async (req, res) => {
   const file = req.file;
   const wav = file ? `${file.path}.wav` : null;
   try {
@@ -239,9 +250,6 @@ async function pump() {
   }
 }
 
-// Chunked uploads: iPhone Safari fails ("Load failed") on one big multipart upload of a phone video,
-// so the browser sends the file in small pieces, then refers to it by uploadId.
-const chunkPath = (id) => path.join(UPLOADS, `chunked-${id}`);
 app.post('/upload/:id/chunk', express.raw({ type: () => true, limit: '12mb' }), async (req, res) => {
   try {
     const { id } = req.params;
@@ -265,11 +273,7 @@ app.post('/upload/:id/chunk', express.raw({ type: () => true, limit: '12mb' }), 
   }
 });
 
-app.post('/render', rateLimit, upload.single('file'), (req, res) => {
-  const uploadId = req.body.uploadId ? String(req.body.uploadId) : '';
-  if (!req.file && uploadId && /^[a-zA-Z0-9-]{8,64}$/.test(uploadId) && existsSync(chunkPath(uploadId))) {
-    req.file = { path: chunkPath(uploadId) };
-  }
+app.post('/render', rateLimit, upload.single('file'), useChunkedUpload, (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   let project;
   try {

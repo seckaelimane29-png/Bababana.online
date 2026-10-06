@@ -30,13 +30,19 @@ export default function EditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const project = useEditor((s) => s.project);
   const [missing, setMissing] = useState(false);
+  const [videoGone, setVideoGone] = useState(false);
 
   useEffect(() => {
     usePlayback.getState().set({ time: 0, timelineTime: 0, playing: false });
     useEditor
       .getState()
       .open(id)
-      .then((ok) => setMissing(!ok));
+      .then(async (ok) => {
+        setMissing(!ok);
+        // Web: projects made before videos were stored in the browser lose their video when Safari reloads.
+        const uri = useEditor.getState().project?.videoUri;
+        if (ok && Platform.OS === 'web' && uri) setVideoGone(!(await fetch(uri).then((r) => r.ok).catch(() => false)));
+      });
     return () => useEditor.getState().close();
   }, [id]);
 
@@ -44,6 +50,17 @@ export default function EditorScreen() {
     return (
       <View style={[styles.screen, styles.center]}>
         <T>Project not found.</T>
+      </View>
+    );
+  }
+  if (videoGone) {
+    return (
+      <View style={[styles.screen, styles.center, { padding: 32, gap: 14 }]}>
+        <T style={{ textAlign: 'center', fontSize: 17 }}>This video is no longer on this device.</T>
+        <T style={{ textAlign: 'center', opacity: 0.7 }}>Go back and add the video again with + New. New videos stay saved.</T>
+        <Pressable onPress={() => router.back()} style={{ backgroundColor: colors.accent, borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11 }}>
+          <T style={{ color: '#000', fontWeight: '700' }}>Go back</T>
+        </Pressable>
       </View>
     );
   }

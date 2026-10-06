@@ -132,6 +132,14 @@ export function elevenWords(data: { words?: { text: string; start: number; end: 
   return toWords((data.words ?? []).filter((w) => (w.type ?? 'word') === 'word').map((w) => ({ word: w.text, start: w.start, end: w.end })));
 }
 
+export type CompareResult = { label: string; ok: boolean; text?: string; detected?: string | null; error?: string };
+
+/** Owner tool: run one clip through several ElevenLabs setups on the server and return each text. */
+export async function compareCaptionEngines(videoUri: string, language: string, onProgress?: (p: number) => void): Promise<{ current: { model: string; language: string }; results: CompareResult[] }> {
+  const base = serverBase();
+  return uploadVideo(`${base}/transcribe/compare`, videoUri, { language }, serverHeaders(), onProgress, true);
+}
+
 /** Chat completion that must return JSON. Goes direct to OpenAI, or through the server when no key is set. */
 async function chatJSON(system: string, user: string): Promise<any> {
   const s = useSettings.getState();

@@ -8,11 +8,14 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 
-import { extractAudio, renderProject } from './render.js';
+import { extractAudio, extractAudioWav, renderProject } from './render.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
 const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY || '';
+// Which ElevenLabs setup writes the captions. Pick the winner of the owner "Test Wolof captions" tool.
+const ELEVENLABS_MODEL = process.env.ELEVENLABS_MODEL || 'scribe_v2';
+const ELEVENLABS_LANGUAGE = process.env.ELEVENLABS_LANGUAGE || 'forced'; // 'forced' = send the chosen language, 'auto' = let ElevenLabs detect
 const TOKEN = process.env.WAXAL_API_TOKEN || '';
 const CHAT_MODEL = process.env.WAXAL_CHAT_MODEL || '';
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 1024);
@@ -96,13 +99,13 @@ const ISO3 = {
   ru: 'rus', hi: 'hin', zh: 'cmn', ja: 'jpn', ko: 'kor', nl: 'nld', pl: 'pol', id: 'ind', sw: 'swa',
 };
 
-async function transcribeElevenLabs(mp3, language) {
+async function transcribeElevenLabs(wav, language, { model = ELEVENLABS_MODEL, forceLanguage = ELEVENLABS_LANGUAGE !== 'auto' } = {}) {
   const form = new FormData();
-  form.append('file', new Blob([await readFile(mp3)], { type: 'audio/mpeg' }), 'audio.mp3');
-  form.append('model_id', 'scribe_v2');
+  form.append('file', new Blob([await readFile(wav)], { type: 'audio/wav' }), 'audio.wav');
+  form.append('model_id', model);
   form.append('timestamps_granularity', 'word');
   form.append('tag_audio_events', 'false');
-  if (language) form.append('language_code', ISO3[language] || language);
+  if (language && forceLanguage) form.append('language_code', ISO3[language] || language);
   const r = await fetch('https://api.elevenlabs.io/v1/speech-to-text', { method: 'POST', headers: { 'xi-api-key': ELEVENLABS_KEY }, body: form });
   const data = await readJson(r);
   if (!r.ok) throw Object.assign(new Error(data?.detail?.message || data?.detail || 'Transcription failed'), { status: r.status });
@@ -126,22 +129,62 @@ async function transcribeOpenAI(mp3, language) {
 
 app.post('/transcribe', rateLimit, upload.single('file'), async (req, res) => {
   const file = req.file;
-  const mp3 = file ? `${file.path}.mp3` : null;
+  const audio = file ? `${file.path}.audio` : null;
   try {
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
     // Default to ElevenLabs (supports Wolof); fall back to whichever key the server has.
     const wanted = req.body.provider === 'openai' ? 'openai' : 'elevenlabs';
     const provider = wanted === 'elevenlabs' && ELEVENLABS_KEY ? 'elevenlabs' : OPENAI_KEY ? 'openai' : ELEVENLABS_KEY ? 'elevenlabs' : null;
     if (!provider) return res.status(500).json({ error: 'Server has no ELEVENLABS_API_KEY or OPENAI_API_KEY configured' });
-    await extractAudio(file.path, mp3);
     const language = req.body.language ? String(req.body.language) : undefined;
-    const result = provider === 'elevenlabs' ? await transcribeElevenLabs(mp3, language) : await transcribeOpenAI(mp3, language);
+    let result;
+    if (provider === 'elevenlabs') {
+      await extractAudioWav(file.path, audio);
+      result = await transcribeElevenLabs(audio, language);
+    } else {
+      await extractAudio(file.path, audio); // small MP3: OpenAI caps uploads at 25 MB
+      result = await transcribeOpenAI(audio, language);
+    }
     res.json({ ...result, provider });
   } catch (e) {
     res.status(e.status || 500).json({ error: String(e.message || e) });
   } finally {
     if (file) rm(file.path, { force: true }).catch(() => {});
-    if (mp3) rm(mp3, { force: true }).catch(() => {});
+    if (audio) rm(audio, { force: true }).catch(() => {});
+  }
+});
+
+// Owner tool: run the same clip through several ElevenLabs setups to see which writes Wolof best.
+const COMPARE_SETUPS = [
+  { label: 'Model v1 · auto-detect', model: 'scribe_v1', forceLanguage: false },
+  { label: 'Model v1 · forced language', model: 'scribe_v1', forceLanguage: true },
+  { label: 'Model v2 · auto-detect', model: 'scribe_v2', forceLanguage: false },
+  { label: 'Model v2 · forced language', model: 'scribe_v2', forceLanguage: true },
+];
+app.post('/transcribe/compare', rateLimit, upload.single('file'), async (req, res) => {
+  const file = req.file;
+  const wav = file ? `${file.path}.wav` : null;
+  try {
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+    if (!ELEVENLABS_KEY) return res.status(500).json({ error: 'Server has no ELEVENLABS_API_KEY configured' });
+    await extractAudioWav(file.path, wav);
+    const language = req.body.language ? String(req.body.language) : 'wo';
+    const results = await Promise.all(
+      COMPARE_SETUPS.map(async (s) => {
+        try {
+          const r = await transcribeElevenLabs(wav, language, s);
+          return { ...s, ok: true, text: r.text || r.words.map((w) => w.word).join(' '), detected: r.language };
+        } catch (e) {
+          return { ...s, ok: false, error: String(e.message || e) };
+        }
+      }),
+    );
+    res.json({ current: { model: ELEVENLABS_MODEL, language: ELEVENLABS_LANGUAGE }, results });
+  } catch (e) {
+    res.status(e.status || 500).json({ error: String(e.message || e) });
+  } finally {
+    if (file) rm(file.path, { force: true }).catch(() => {});
+    if (wav) rm(wav, { force: true }).catch(() => {});
   }
 });
 

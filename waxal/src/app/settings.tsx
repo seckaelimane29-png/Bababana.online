@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -6,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Row } from '@/components/Sheet';
 import { Chip, GradientButton, IconButton, Section, T } from '@/components/ui';
-import { LANGUAGES } from '@/lib/ai';
+import { compareCaptionEngines, LANGUAGES, type CompareResult } from '@/lib/ai';
 import { useSettings } from '@/lib/settings';
 import { colors } from '@/theme';
 
@@ -136,6 +137,7 @@ export default function SettingsScreen() {
           <TextInput value={model} onChangeText={setModel} autoCapitalize="none" autoCorrect={false} style={[styles.input, styles.box]} placeholderTextColor={colors.textMute} />
         </Section>
 
+            <WolofTest lang={lang} />
           </View>
         ) : null}
 
@@ -152,5 +154,53 @@ const styles = StyleSheet.create({
   input: { flex: 1, color: colors.text, fontSize: 15, paddingHorizontal: 14, paddingVertical: 14 },
   box: { backgroundColor: colors.surface2, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
   advanced: { marginTop: 10, padding: 14, borderRadius: 18, borderWidth: 1, borderColor: '#4A3B12', backgroundColor: '#15120A' },
+  result: { backgroundColor: colors.surface2, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.border },
   hint: { color: colors.textMute, fontSize: 12, marginTop: 8, lineHeight: 17 },
 });
+
+/** Owner-only: compare ElevenLabs setups on a real Wolof clip, to pick the default that writes it best. */
+function WolofTest({ lang }: { lang: string }) {
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [out, setOut] = useState<{ current: { model: string; language: string }; results: CompareResult[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const run = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], quality: 1 });
+    if (res.canceled || !res.assets?.[0]) return;
+    setBusy(true);
+    setError(null);
+    setOut(null);
+    setProgress(0);
+    try {
+      setOut(await compareCaptionEngines(res.assets[0].uri, lang === 'auto' ? 'wo' : lang, setProgress));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title="Test Wolof captions">
+      <T style={styles.hint}>Pick a short video (20–60 s) where you speak. The server writes it 4 different ways; tell Claude which one matches what you said.</T>
+      <Chip label={busy ? (progress > 0 && progress < 1 ? `Uploading ${Math.round(progress * 100)}%` : 'Comparing…') : 'Pick a video and compare'} onPress={busy ? () => {} : run} />
+      {busy ? <ActivityIndicator color={colors.accent} style={{ marginTop: 10 }} /> : null}
+      {error ? <T style={{ color: colors.danger, marginTop: 10 }}>{error}</T> : null}
+      {out ? (
+        <View style={{ gap: 10, marginTop: 12 }}>
+          <T style={styles.hint}>
+            Used for captions now: {out.current.model} · {out.current.language === 'auto' ? 'auto-detect' : 'forced language'}
+          </T>
+          {out.results.map((r, i) => (
+            <View key={r.label} style={styles.result}>
+              <T weight="bold" style={{ marginBottom: 4 }}>
+                {i + 1}. {r.label}
+                {r.detected ? `  (heard: ${r.detected})` : ''}
+              </T>
+              <T style={{ color: r.ok ? colors.text : colors.danger, lineHeight: 20 }}>{r.ok ? r.text || '(nothing heard)' : r.error}</T>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </Section>
+  );
+}

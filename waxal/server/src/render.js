@@ -125,6 +125,12 @@ export async function renderProject({ input, project, workDir, fontsDir, onProgr
 }
 
 /** Small mono MP3 for speech-to-text (keeps uploads under OpenAI's 25 MB limit for long videos). */
+/** Lossless 16 kHz mono WAV for ElevenLabs (no MP3 artefacts on hard-to-hear Wolof sounds). */
+export async function extractAudioWav(input, out) {
+  await run('ffmpeg', ['-y', '-hide_banner', '-i', input, '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'pcm_s16le', '-f', 'wav', out]);
+  return out;
+}
+
 export async function extractAudio(input, out) {
   await run('ffmpeg', ['-y', '-hide_banner', '-i', input, '-vn', '-ac', '1', '-ar', '16000', '-b:a', '48k', '-f', 'mp3', out]);
   return out;

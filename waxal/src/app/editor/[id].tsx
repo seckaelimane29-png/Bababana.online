@@ -141,7 +141,9 @@ function Editor({ videoUri }: { videoUri: string }) {
   // ---- playback clock: follows clips, skipping removed parts
   useEffect(() => {
     let raf = 0;
-    const tick = () => {
+    let lastTick = 0;
+    let reported = false;
+    const step = () => {
       const p = projectRef.current;
       const clips = p.clips;
       if (clips.length) {
@@ -169,10 +171,32 @@ function Editor({ videoUri }: { videoUri: string }) {
         const st = usePlayback.getState();
         if (Math.abs(st.time - t) > 0.001 || Math.abs(st.timelineTime - tl) > 0.001) st.set({ time: t, timelineTime: tl });
       }
+    };
+    // Never let one bad frame stop the clock (captions and the time display hang on it).
+    const safeStep = () => {
+      lastTick = Date.now();
+      try {
+        step();
+      } catch (e) {
+        if (!reported) {
+          reported = true;
+          toast(`Playback error: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+    };
+    const tick = () => {
+      safeStep();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    // Backup clock: some phones pause animation frames (low power mode, video layers); keep time moving anyway.
+    const backup = setInterval(() => {
+      if (Date.now() - lastTick > 120) safeStep();
+    }, 100);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(backup);
+    };
   }, [player]);
 
   const seekTimeline = useCallback(

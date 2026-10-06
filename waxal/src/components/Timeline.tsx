@@ -66,7 +66,11 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
     // While playing, only a real touch counts: our own follow-scroll events can arrive a few frames late.
     const byUser = userScrolling.current || momentum.current || fingerActive() || (!playing && Math.abs(x - autoX.current) > 2);
     if (!byUser) return;
-    if (usePlayback.getState().playing) onScrubStart();
+    if (playing) {
+      // Only a finger actually on the timeline pauses playback (iPhone keeps sending scroll events after a swipe).
+      if (!touching.current && !userScrolling.current) return;
+      onScrubStart();
+    }
     autoX.current = x;
     onSeek(Math.min(total, Math.max(0, x / pps)));
   };

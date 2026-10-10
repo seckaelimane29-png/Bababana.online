@@ -1,7 +1,8 @@
 /* ETS MM SAMB — catalogue.
    Each bale has text in three languages (fr / en / wo) and an `art` block
-   that drives the generated demo picture (see js/art.js). To use a real
-   photo instead, add `photo: 'assets/photos/xxx.jpg'` to a product. */
+   that drives the generated picture used when a bale has no photo (js/art.js).
+   This list is only the offline fallback: the live catalogue comes from the
+   database and is edited on the admin page (admin.html). */
 window.MMS_CATEGORIES = [
   { id: 'all',      fr: 'Tout',          en: 'All',          wo: 'Lépp' },
   { id: 'femmes',   fr: 'Femmes',        en: 'Women',        wo: 'Jigéen' },
@@ -15,7 +16,8 @@ window.MMS_CATEGORIES = [
 
 window.MMS_PRODUCTS = [
   {
-    id: 'robes-ete-uk', cat: 'femmes', weight: 45, pieces: '180–220', grade: 'A', origin: 'UK',
+    id: 'robes-ete-uk', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/robes-ete-uk.jpg',
+    cat: 'femmes', weight: 45, pieces: '180–220', grade: 'A', origin: 'UK',
     badge: 'hot',
     name: { fr: 'Robes d’été femme', en: 'Women’s summer dresses', wo: 'Robu jigéen (nawet)' },
     desc: {
@@ -26,7 +28,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'clear', palette: ['#e94f64', '#f6c445', '#5aa9e6', '#ffffff', '#7bc47f', '#f08a5d'] }
   },
   {
-    id: 'jeans-homme-ca', cat: 'hommes', weight: 55, pieces: '90–110', grade: 'A', origin: 'Canada',
+    id: 'jeans-homme-ca', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/jeans-homme-ca.jpg',
+    cat: 'hommes', weight: 55, pieces: '90–110', grade: 'A', origin: 'Canada',
     badge: 'new',
     name: { fr: 'Jeans homme', en: 'Men’s jeans', wo: 'Jiin góor' },
     desc: {
@@ -37,7 +40,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'clear', palette: ['#1f3b63', '#2e5a88', '#4a78a8', '#6b93bf', '#18304f', '#8fb0d4'] }
   },
   {
-    id: 'tshirts-mixte-us', cat: 'mixte', weight: 45, pieces: '250–300', grade: 'A', origin: 'USA',
+    id: 'tshirts-mixte-us', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/tshirts-mixte-us.jpg',
+    cat: 'mixte', weight: 45, pieces: '250–300', grade: 'A', origin: 'USA',
     name: { fr: 'T-shirts mixte', en: 'Mixed T-shirts', wo: 'Mbubb T-shirt (jaxase)' },
     desc: {
       fr: 'T-shirts coton homme et femme, unis et imprimés. Idéal pour la revente en détail.',
@@ -47,7 +51,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'orange', palette: ['#ffffff', '#222222', '#c0392b', '#2980b9', '#f1c40f', '#7f8c8d'] }
   },
   {
-    id: 'enfants-ete', cat: 'enfants', weight: 45, pieces: '300–350', grade: 'A', origin: 'Korea',
+    id: 'enfants-ete', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/enfants-ete.jpg',
+    cat: 'enfants', weight: 45, pieces: '300–350', grade: 'A', origin: 'Korea',
     badge: 'hot',
     name: { fr: 'Vêtements enfants été', en: 'Kids’ summer clothes', wo: 'Yére xale (nawet)' },
     desc: {
@@ -68,7 +73,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'clear', palette: ['#dfe6ee', '#9bb7d4', '#c94c4c', '#ffffff', '#3b5b7a', '#b8a07e'] }
   },
   {
-    id: 'chaussures-sport', cat: 'chaussures', weight: 25, pieces: '25–30 paires', grade: 'A', origin: 'USA',
+    id: 'chaussures-sport', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/chaussures-sport.jpg',
+    cat: 'chaussures', weight: 25, pieces: '25–30 paires', grade: 'A', origin: 'USA',
     badge: 'new',
     name: { fr: 'Baskets de sport', en: 'Sports sneakers', wo: 'Dàll espoor' },
     desc: {
@@ -79,7 +85,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'green', palette: ['#ffffff', '#111111', '#e74c3c', '#3498db', '#bdc3c7', '#f39c12'] }
   },
   {
-    id: 'draps-couvertures', cat: 'maison', weight: 55, pieces: '60–80', grade: 'A', origin: 'Canada',
+    id: 'draps-couvertures', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/draps-couvertures.jpg',
+    cat: 'maison', weight: 55, pieces: '60–80', grade: 'A', origin: 'Canada',
     name: { fr: 'Draps & couvertures', en: 'Sheets & blankets', wo: 'Lal ak mbaj' },
     desc: {
       fr: 'Draps, housses de couette et couvertures polaires. Grandes tailles, propres.',
@@ -89,7 +96,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'orange', palette: ['#f4efe6', '#c9b79c', '#8e6c8a', '#6aa5a9', '#d98e73', '#ffffff'] }
   },
   {
-    id: 'sacs-main', cat: 'sacs', weight: 30, pieces: '70–90', grade: 'A', origin: 'UK',
+    id: 'sacs-main', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/sacs-main.jpg',
+    cat: 'sacs', weight: 30, pieces: '70–90', grade: 'A', origin: 'UK',
     name: { fr: 'Sacs à main', en: 'Handbags', wo: 'Mbuusu loxo' },
     desc: {
       fr: 'Sacs à main, bandoulières et sacs à dos. Cuir et synthétique, bon état.',
@@ -129,7 +137,8 @@ window.MMS_PRODUCTS = [
     art: { tarp: 'yellow', palette: ['#ffd6e0', '#c1e1ff', '#fff3b0', '#d4f4dd', '#ffffff', '#e2c2ff'] }
   },
   {
-    id: 'creme-premium', cat: 'mixte', weight: 100, pieces: '400+', grade: 'Crème', origin: 'UK',
+    id: 'creme-premium', photo: 'https://glrujmmuqqddymsfmlil.supabase.co/storage/v1/object/public/products/demo/creme-premium.jpg',
+    cat: 'mixte', weight: 100, pieces: '400+', grade: 'Crème', origin: 'UK',
     badge: 'premium',
     name: { fr: 'Balle Crème premium', en: 'Premium “Crème” bale', wo: 'Bal Krem (premium)' },
     desc: {

@@ -488,3 +488,24 @@ svg path, svg circle, svg rect { vector-effect: non-scaling-stroke; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   [data-reveal] { opacity: 1; transform: none; }
 }
+
+/* ---------- real photos ---------- */
+.hero-art.has-photo { align-self: center; margin-bottom: 56px; }
+.hero-photo {
+  position: relative; margin: 0; aspect-ratio: 5 / 4; border-radius: 22px; overflow: hidden; background: var(--ink-2);
+  box-shadow: 0 30px 70px -25px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.08);
+  animation: unveil 1.1s .15s var(--ease) both;
+}
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; animation: kenburns 18s ease-in-out infinite alternate; }
+.hero-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(22,25,28,.55)); pointer-events: none; }
+.hero-art.has-photo .hero-tag { top: auto; bottom: 18px; left: 18px; right: auto; }
+.cat-art.has-photo { padding: 0; aspect-ratio: 4 / 3; overflow: hidden; }
+.cat-art.has-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s var(--ease); }
+.cat:hover .cat-art.has-photo img { transform: scale(1.07); }
+.card-pic img, .pdp-pic img, .li-pic img { background: #2b3035; }
+@keyframes unveil { from { clip-path: inset(0 0 100% 0 round 22px); transform: translateY(24px); } to { clip-path: inset(0 0 0 0 round 22px); transform: none; } }
+@keyframes kenburns { from { transform: scale(1.02); } to { transform: scale(1.12) translate(-2%, -1%); } }
+@media (max-width: 900px) {
+  .hero-art.has-photo { margin-bottom: 40px; }
+  .hero-photo { aspect-ratio: 16 / 11; }
+}

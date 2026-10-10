@@ -6,6 +6,7 @@
 
   var WA_MAIN = '221761669126';
   var WA_ALT = '221785520550';
+  var CFG = window.MMS_CONFIG || {};
   var PRODUCTS = window.MMS_PRODUCTS;
   var CATS = window.MMS_CATEGORIES;
   var I18N = window.MMS_I18N;
@@ -52,7 +53,7 @@
   /* ---------- pictures ---------- */
   var svgCache = {};
   function picture(p) {
-    if (p.photo) return '<img src="' + esc(p.photo) + '" alt="' + esc(tx(p.name)) + '" loading="lazy">';
+    if (p.photo) return '<img src="' + esc(p.photo) + '" alt="' + esc(tx(p.name)) + '" loading="lazy" decoding="async">';
     return svgCache[p.id] || (svgCache[p.id] = window.MMSArt.productSVG(p));
   }
 
@@ -177,9 +178,12 @@
     var ticker = L().tickerItems.map(function (s) { return '<span>' + esc(s) + '</span><i>✦</i>'; }).join('');
     var catCards = CATS.filter(function (c) { return c.id !== 'all'; }).map(function (c, i) {
       var ps = PRODUCTS.filter(function (p) { return p.cat === c.id; });
-      var p = ps[0];
+      var p = ps.filter(function (x) { return x.photo; })[0] || ps[0];
+      var art = !p ? window.MMSArt.miniBale('cat-' + c.id, 'clear', ['#3a4148', '#4b545c', '#5c6670'])
+        : p.photo ? '<img src="' + esc(p.photo) + '" alt="" loading="lazy" decoding="async">'
+        : window.MMSArt.miniBale('cat-' + c.id, p.art.tarp, p.art.palette);
       return '<a class="cat" href="#/catalogue?cat=' + c.id + '" data-reveal style="--d:' + (i % 4) * 60 + 'ms">' +
-        '<span class="cat-art">' + window.MMSArt.miniBale('cat-' + c.id, p.art.tarp, p.art.palette) + '</span>' +
+        '<span class="cat-art' + (p && p.photo ? ' has-photo' : '') + '">' + art + '</span>' +
         '<span class="cat-name">' + esc(tx(c)) + '</span><span class="cat-n mono">' + ps.length + ' ' + esc(t('bales')) + ' →</span></a>';
     }).join('');
 
@@ -201,7 +205,8 @@
               '<div><dt>' + esc(t('stat3')) + '</dt><dd>' + esc(t('stat3v')) + '</dd></div>' +
             '</dl>' +
           '</div>' +
-          '<div class="hero-art">' + window.MMSArt.heroSVG() +
+          '<div class="hero-art' + (CFG.HERO_PHOTO ? ' has-photo' : '') + '">' +
+            (CFG.HERO_PHOTO ? '<figure class="hero-photo"><img src="' + esc(CFG.HERO_PHOTO) + '" alt="" fetchpriority="high"></figure>' : window.MMSArt.heroSVG()) +
             '<div class="hero-tag mono"><b>ETS MM SAMB</b><span>TOUBA · DIANATOU</span><span>STOCK ' + PRODUCTS.length + ' TYPES</span></div>' +
           '</div>' +
         '</div>' +
@@ -474,8 +479,50 @@
   window.addEventListener('hashchange', render);
   $('#year').textContent = new Date().getFullYear();
 
+  /* ---------- live catalogue from the database ---------- */
+  function fromRow(r) {
+    return {
+      id: r.id, cat: r.cat, weight: r.weight, pieces: r.pieces, grade: r.grade, origin: r.origin,
+      badge: r.badge || null, photo: r.photo_url || null,
+      name: { fr: r.name_fr, en: r.name_en || r.name_fr, wo: r.name_wo || r.name_fr },
+      desc: { fr: r.desc_fr, en: r.desc_en || r.desc_fr, wo: r.desc_wo || r.desc_fr },
+      art: { tarp: r.tarp || 'clear', palette: r.palette && r.palette.length ? r.palette : ['#e94f64', '#f6c445', '#5aa9e6', '#ffffff'] }
+    };
+  }
+  function useProducts(list) {
+    if (!list || !list.length) return;
+    PRODUCTS = window.MMS_PRODUCTS = list;
+    svgCache = {};
+    state.list = state.list.filter(function (it) { return byId(it.id); });
+    save('mms_list', state.list);
+    render(); updateCounts();
+    if ($('#drawer').classList.contains('open')) renderList();
+  }
+  function loadLive() {
+    if (!CFG.SUPABASE_URL || !window.fetch) return;
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 8000);
+    fetch(CFG.SUPABASE_URL + '/rest/v1/products?select=*&order=sort.asc,id.asc', {
+      headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY },
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (rows) {
+      var list = rows.map(fromRow);
+      save('mms_products', list);
+      if (JSON.stringify(list) !== JSON.stringify(PRODUCTS)) useProducts(list);
+    }).catch(function (e) {
+      if (window.console) console.warn('ETS MM SAMB: using saved catalogue, database unavailable:', e.message);
+    }).then(function () { clearTimeout(timer); });
+  }
+  // Last catalogue seen on this device shows instantly; the database refreshes it.
+  var cached = load('mms_products', null);
+  if (cached && cached.length) { PRODUCTS = window.MMS_PRODUCTS = cached; }
+
   var hadLang = !!state.lang;
   if (!hadLang) state.lang = 'fr';
   applyStatic(); render(); updateCounts();
   if (hadLang) $('#splash').remove(); else splash();
+  loadLive();
 })();

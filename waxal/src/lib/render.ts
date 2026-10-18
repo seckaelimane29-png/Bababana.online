@@ -2,6 +2,7 @@ import { File, Paths, UploadType } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import { FONTS } from '@/lib/fonts';
+import { imageDataUrl } from '@/lib/images';
 import { serverBase, serverHeaders } from '@/lib/settings';
 import { uploadInChunks } from '@/lib/webAudio';
 import type { Project } from '@/types';
@@ -10,13 +11,17 @@ export type RenderStage = { stage: 'upload' | 'render' | 'download' | 'done'; pr
 
 export type RenderOptions = { quality: '720' | '1080' | 'source'; burnCaptions: boolean };
 
-function payload(p: Project, opts: RenderOptions) {
+async function payload(p: Project, opts: RenderOptions) {
+  const images = await Promise.all(
+    (p.images ?? []).map(async (o) => ({ start: o.start, end: o.end, x: o.x, y: o.y, w: o.w, aspect: o.aspect, data: await imageDataUrl(o.uri) })),
+  );
   return JSON.stringify({
     width: p.width,
     height: p.height,
     clips: p.clips,
     captions: opts.burnCaptions ? p.captions : [],
     texts: p.texts,
+    images,
     style: { ...p.style, fontFamily: FONTS[p.style.font].assFamily },
     textFonts: Object.fromEntries(Object.entries(FONTS).map(([k, v]) => [k, v.assFamily])),
     volume: p.muted ? 0 : p.volume,
@@ -44,7 +49,7 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
     }
     const form = new FormData();
     form.append('uploadId', uploadId);
-    form.append('project', payload(p, opts));
+    form.append('project', await payload(p, opts));
     const res = await fetch(`${base}/render`, { method: 'POST', body: form, headers: serverHeaders() });
     if (!res.ok) throw new Error(`Export failed (${res.status}): ${await res.text()}`);
     job = await res.json();
@@ -55,7 +60,7 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
       fieldName: 'file',
       mimeType: 'video/mp4',
       headers: serverHeaders(),
-      parameters: { project: payload(p, opts) },
+      parameters: { project: await payload(p, opts) },
       onProgress: (d) => d.totalBytes && onStage({ stage: 'upload', progress: d.bytesSent / d.totalBytes }),
     });
     if (res.status >= 400) throw new Error(`Upload failed (${res.status}): ${res.body.slice(0, 200)}`);

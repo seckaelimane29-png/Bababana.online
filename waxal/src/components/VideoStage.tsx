@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { VideoView, type VideoPlayer } from 'expo-video';
 import { useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -9,7 +10,7 @@ import { FONTS } from '@/lib/fonts';
 import { useEditor } from '@/store/projects';
 import { usePlayback } from '@/store/playback';
 import { colors } from '@/theme';
-import type { TextOverlay } from '@/types';
+import type { ImageOverlay, TextOverlay } from '@/types';
 
 type Props = {
   player: VideoPlayer;
@@ -42,6 +43,9 @@ export function VideoStage({ player, width, height, onTogglePlay, onEditText }: 
           </View>
         ) : null}
       </Pressable>
+      {(project.images ?? []).map((o) => (
+        <ImageOverlayView key={o.id} overlay={o} width={width} height={height} />
+      ))}
       <CaptionOverlay captions={project.captions} style={project.style} width={width} height={height} />
       <CaptionDragBand width={width} height={height} onTap={onTogglePlay} />
       {project.texts.map((t) => (
@@ -158,7 +162,101 @@ function TextOverlayView({ overlay, width, height, onEdit }: { overlay: TextOver
   );
 }
 
+const setImage = (id: string, patch: Partial<ImageOverlay>) =>
+  useEditor.getState().update((p) => ({ ...p, images: (p.images ?? []).map((o) => (o.id === id ? { ...o, ...patch } : o)) }), { history: false });
+
+/** A picture on top of the video: drag to move, drag the corner handle to resize. */
+function ImageOverlayView({ overlay, width, height }: { overlay: ImageOverlay; width: number; height: number }) {
+  const visible = usePlayback((s) => s.time >= overlay.start && s.time < overlay.end);
+  const selected = useEditor((s) => s.selection?.kind === 'image' && s.selection.id === overlay.id);
+  const start = useRef({ x: 0, y: 0, w: 0 });
+  const moved = useRef(false);
+  const ctx = useRef({ width, height, overlay });
+  ctx.current = { width, height, overlay };
+
+  const grab = () => {
+    moved.current = false;
+    const o = ctx.current.overlay;
+    start.current = { x: o.x, y: o.y, w: o.w };
+    useEditor.getState().select({ kind: 'image', id: o.id });
+  };
+  const firstMove = (dx: number, dy: number) => {
+    if (!moved.current && Math.abs(dx) + Math.abs(dy) < 4) return false;
+    if (!moved.current) useEditor.getState().checkpoint();
+    moved.current = true;
+    return true;
+  };
+  const mover = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: grab,
+      onPanResponderMove: (_e, g) => {
+        if (!firstMove(g.dx, g.dy)) return;
+        const { width: w, height: h, overlay: o } = ctx.current;
+        setImage(o.id, {
+          x: Math.min(1, Math.max(0, start.current.x + g.dx / w)),
+          y: Math.min(1, Math.max(0, start.current.y + g.dy / h)),
+        });
+      },
+    }),
+  ).current;
+  const resizer = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: grab,
+      onPanResponderMove: (_e, g) => {
+        if (!firstMove(g.dx, g.dy)) return;
+        const { width: w, overlay: o } = ctx.current;
+        // The handle sits on the corner of a centered box, so the width grows by twice the finger's movement.
+        setImage(o.id, { w: Math.min(1.5, Math.max(0.06, start.current.w + (2 * g.dx) / w)) });
+      },
+    }),
+  ).current;
+
+  if (!visible && !selected) return null;
+  const w = overlay.w * width;
+  const h = w * overlay.aspect;
+  return (
+    <View
+      {...mover.panHandlers}
+      style={{
+        position: 'absolute',
+        left: overlay.x * width - w / 2,
+        top: overlay.y * height - h / 2,
+        width: w,
+        height: h,
+        opacity: visible ? 1 : 0.45,
+        borderWidth: selected ? 1.5 : 0,
+        borderColor: colors.lime,
+        borderStyle: 'dashed',
+      }}
+    >
+      <Image source={{ uri: overlay.uri }} style={{ width: '100%', height: '100%' }} contentFit="fill" />
+      {selected ? (
+        <View {...resizer.panHandlers} hitSlop={12} style={styles.resizeHandle}>
+          <Ionicons name="resize" size={14} color="#0B0B10" />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  resizeHandle: {
+    position: 'absolute',
+    right: -13,
+    bottom: -13,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.lime,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   // iPhone Safari draws a blank video inside a rounded, clipped box (audio still plays), so skip rounding on web.
   stage: Platform.OS === 'web' ? { backgroundColor: '#000', overflow: 'hidden' } : { backgroundColor: '#000', borderRadius: 18, overflow: 'hidden' },
   playBadge: {

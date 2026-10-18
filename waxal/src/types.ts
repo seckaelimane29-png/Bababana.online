@@ -69,6 +69,22 @@ export type TextOverlay = {
   strokeColor: string | null;
 };
 
+/** A picture (photo, logo, sticker) shown on top of the video. */
+export type ImageOverlay = {
+  id: string;
+  /** data: URL on web, local file URI on phones. */
+  uri: string;
+  start: number;
+  end: number;
+  /** Center position, fractions of the video frame. */
+  x: number;
+  y: number;
+  /** Width as a fraction of the frame width. */
+  w: number;
+  /** Image height / width. */
+  aspect: number;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -81,6 +97,7 @@ export type Project = {
   clips: Clip[];
   captions: Caption[];
   texts: TextOverlay[];
+  images?: ImageOverlay[];
   style: CaptionStyle;
   /** 0..2 — above 1 is a boost (applied on export, preview caps at 1). */
   volume: number;
@@ -93,4 +110,5 @@ export type Selection =
   | { kind: 'clip'; id: string }
   | { kind: 'caption'; id: string }
   | { kind: 'text'; id: string }
+  | { kind: 'image'; id: string }
   | null;

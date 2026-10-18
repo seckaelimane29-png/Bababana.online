@@ -90,6 +90,14 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
     [project.texts, project.clips],
   );
 
+  const imageBlocks = useMemo(
+    () =>
+      (project.images ?? []).flatMap((o) =>
+        sourceRangeToTimeline(project.clips, o.start, o.end).map((r, i) => ({ key: `${o.id}-${i}`, id: o.id, start: r.start, end: r.end, uri: o.uri })),
+      ),
+    [project.images, project.clips],
+  );
+
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
@@ -201,6 +209,29 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
                 );
               })}
             </View>
+            {/* overlay (picture) track */}
+            {imageBlocks.length ? (
+              <View style={[styles.track, { height: 28, marginTop: 6 }]}>
+                {imageBlocks.map((b) => {
+                  const sel = selection?.kind === 'image' && selection.id === b.id;
+                  return (
+                    <Pressable
+                      key={b.key}
+                      onPress={() => {
+                        tap();
+                        select(sel ? null : { kind: 'image', id: b.id });
+                      }}
+                      style={[styles.block, { left: b.start * pps, width: Math.max((b.end - b.start) * pps - 2, 3), backgroundColor: sel ? '#1F8A70' : '#15463A' }, sel && styles.selected]}
+                    >
+                      <Image source={{ uri: b.uri }} style={{ width: 18, height: 18, borderRadius: 3 }} contentFit="cover" />
+                      <T numberOfLines={1} weight="semibold" style={{ fontSize: 10, color: '#fff', flexShrink: 1 }}>
+                        Overlay
+                      </T>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
         </ScrollView>
         <View pointerEvents="none" style={[styles.playhead, { left: half - 1 }]}>

@@ -17,6 +17,7 @@ import { Toolbar, type Tool } from '@/components/Toolbar';
 import { IconButton, T } from '@/components/ui';
 import { VideoStage } from '@/components/VideoStage';
 import { splitCaptionAt } from '@/lib/captions';
+import { pickOverlayImage } from '@/lib/images';
 import { uid } from '@/lib/id';
 import { clipOffsets, sourceToTimeline, timelineDuration, timelineToSource } from '@/lib/timeline';
 import { useEditor } from '@/store/projects';
@@ -276,6 +277,8 @@ function Editor({ videoUri }: { videoUri: string }) {
       update((p) => ({ ...p, captions: p.captions.filter((c) => c.id !== selection.id) }));
     } else if (selection.kind === 'text') {
       update((p) => ({ ...p, texts: p.texts.filter((t) => t.id !== selection.id) }));
+    } else if (selection.kind === 'image') {
+      update((p) => ({ ...p, images: (p.images ?? []).filter((o) => o.id !== selection.id) }));
     }
     select(null);
     toast('Deleted');
@@ -303,6 +306,39 @@ function Editor({ videoUri }: { videoUri: string }) {
     setPanel({ text: t.id });
   };
 
+  const addOverlay = async () => {
+    const id = uid('i');
+    let picked: { uri: string; aspect: number } | null = null;
+    try {
+      picked = await pickOverlayImage(id);
+    } catch (e) {
+      return toast(`Couldn't open the picture: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (!picked) return;
+    const { time, timelineTime } = playhead();
+    const p = useEditor.getState().project!;
+    const { index } = timelineToSource(p.clips, timelineTime);
+    const clipEnd = p.clips[index]?.end ?? p.duration;
+    const frameAspect = p.height / p.width;
+    // Start at half the frame width, smaller if the picture is tall.
+    const w = Math.min(0.5, (0.5 * frameAspect) / picked.aspect);
+    const o = { id, uri: picked.uri, aspect: picked.aspect, start: time, end: Math.min(time + 4, Math.max(clipEnd, time + 0.5)), x: 0.5, y: 0.4, w };
+    update((x) => ({ ...x, images: [...(x.images ?? []), o] }));
+    select({ kind: 'image', id });
+    toast('Drag to move · corner to resize');
+  };
+
+  /** Make the selected picture start or stop at the playhead. */
+  const setImageEdge = (edge: 'start' | 'end') => {
+    if (selection?.kind !== 'image') return;
+    const { time } = playhead();
+    const o = (project.images ?? []).find((x) => x.id === selection.id);
+    if (!o) return;
+    if (edge === 'start' ? time >= o.end - 0.1 : time <= o.start + 0.1) return toast(edge === 'start' ? 'Move the playhead before the end of the overlay' : 'Move the playhead after the start of the overlay');
+    update((p) => ({ ...p, images: (p.images ?? []).map((x) => (x.id === o.id ? { ...x, [edge]: time } : x)) }));
+    toast(edge === 'start' ? 'Overlay starts here' : 'Overlay ends here');
+  };
+
   const trim = (side: 'left' | 'right') => {
     if (selection?.kind !== 'clip') return;
     const { time } = playhead();
@@ -316,6 +352,12 @@ function Editor({ videoUri }: { videoUri: string }) {
     if (selection?.kind === 'clip') {
       update((p) => ({ ...p, clips: p.clips.flatMap((x) => (x.id === selection.id ? [x, { ...x, id: uid('k') }] : [x])) }));
       toast('Clip duplicated');
+    } else if (selection?.kind === 'image') {
+      const o = (project.images ?? []).find((x) => x.id === selection.id);
+      if (!o) return;
+      const copy = { ...o, id: uid('i'), x: Math.min(0.95, o.x + 0.06), y: Math.min(0.95, o.y + 0.06) };
+      update((p) => ({ ...p, images: [...(p.images ?? []), copy] }));
+      select({ kind: 'image', id: copy.id });
     } else if (selection?.kind === 'text') {
       const t = project.texts.find((x) => x.id === selection.id);
       if (!t) return;
@@ -373,9 +415,18 @@ function Editor({ videoUri }: { videoUri: string }) {
         { key: 'dup', icon: 'copy-outline', label: 'Duplicate', onPress: duplicate },
         { key: 'del', icon: 'trash', label: 'Delete', onPress: remove, danger: true },
       ];
+    if (selection?.kind === 'image')
+      return [
+        { key: 'start', icon: 'play-skip-back-outline', label: 'Start here', onPress: () => setImageEdge('start') },
+        { key: 'end', icon: 'play-skip-forward-outline', label: 'End here', onPress: () => setImageEdge('end') },
+        { key: 'add', icon: 'image-outline', label: 'Add another', onPress: addOverlay },
+        { key: 'dup', icon: 'copy-outline', label: 'Duplicate', onPress: duplicate },
+        { key: 'del', icon: 'trash', label: 'Delete', onPress: remove, danger: true },
+      ];
     return [
       { key: 'captions', icon: 'sparkles', label: 'Captions', onPress: () => setPanel('captions'), accent: true },
       { key: 'text', icon: 'text', label: 'Add text', onPress: addText },
+      { key: 'overlay', icon: 'image', label: 'Overlay', onPress: addOverlay },
       { key: 'style', icon: 'color-palette', label: 'Style', onPress: () => setPanel('style') },
       { key: 'split', icon: 'cut', label: 'Split', onPress: split },
       { key: 'delete', icon: 'trash-outline', label: 'Delete', onPress: remove },
@@ -435,7 +486,7 @@ function Editor({ videoUri }: { videoUri: string }) {
       />
 
       <View style={{ paddingBottom: insets.bottom + 4, backgroundColor: colors.bg }}>
-        <Toolbar tools={tools} onBack={selection ? () => select(null) : undefined} title={selection ? selection.kind : undefined} />
+        <Toolbar tools={tools} onBack={selection ? () => select(null) : undefined} title={selection ? (selection.kind === 'image' ? 'overlay' : selection.kind) : undefined} />
       </View>
 
       {panel === 'captions' ? <CaptionsPanel onClose={closePanel} /> : null}

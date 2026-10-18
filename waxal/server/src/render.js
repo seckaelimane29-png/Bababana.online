@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { buildASS } from './ass.js';
-import { timelineDuration } from './timeline.js';
+import { sourceRangeToTimeline, timelineDuration } from './timeline.js';
 
 export function run(cmd, args) {
   return new Promise((resolve, reject) => {
@@ -53,6 +53,19 @@ function atempoChain(speed) {
   return parts.join(',');
 }
 
+/** Saves each overlay picture (sent as a data: URL) to disk; skips anything that isn't an image. */
+async function writeOverlays(images, workDir) {
+  const out = [];
+  for (const [i, o] of (Array.isArray(images) ? images : []).entries()) {
+    const m = /^data:image\/(png|jpe?g|webp|gif);base64,(.+)$/s.exec(String(o?.data || ''));
+    if (!m || !(o.end > o.start) || !(o.w > 0) || !(o.aspect > 0)) continue;
+    const file = path.join(workDir, `overlay-${i}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`);
+    await writeFile(file, Buffer.from(m[2], 'base64'));
+    out.push({ ...o, file, x: Number(o.x) || 0.5, y: Number(o.y) || 0.5, w: Math.min(3, Number(o.w)), aspect: Math.min(10, Number(o.aspect)) });
+  }
+  return out.slice(0, 20);
+}
+
 export async function renderProject({ input, project, workDir, fontsDir, onProgress }) {
   const info = await probe(input);
   const clips = (project.clips?.length ? project.clips : [{ start: 0, end: info.duration }]).map((c) => ({
@@ -93,7 +106,23 @@ export async function renderProject({ input, project, workDir, fontsDir, onProgr
   f.push(`${concatIn}concat=n=${n}:v=1:a=${info.hasAudio ? 1 : 0}${info.hasAudio ? '[vc][ac]' : '[vc]'}`);
   const assArg = assPath.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'");
   const fontsArg = fontsDir.replace(/\\/g, '/').replace(/:/g, '\\:').replace(/'/g, "\\'");
-  f.push(`[vc]scale=${W}:${H}:flags=lanczos,setsar=1,ass=filename='${assArg}':fontsdir='${fontsArg}',setpts=PTS/${speed},format=yuv420p[vout]`);
+  // Picture overlays sit above the video and below captions/texts.
+  const overlays = await writeOverlays(project.images, workDir);
+  f.push(`[vc]scale=${W}:${H}:flags=lanczos,setsar=1[base0]`);
+  let base = '[base0]';
+  overlays.forEach((o, i) => {
+    const ranges = sourceRangeToTimeline(clips, o.start, o.end);
+    if (!ranges.length) return;
+    const w = even(Math.max(2, o.w * W));
+    const h = even(Math.max(2, w * o.aspect));
+    const x = Math.round(o.x * W - w / 2);
+    const y = Math.round(o.y * H - h / 2);
+    const enable = ranges.map((r) => `between(t,${r.start.toFixed(3)},${r.end.toFixed(3)})`).join('+');
+    f.push(`[${i + 1}:v]scale=${w}:${h},format=rgba[img${i}]`);
+    f.push(`${base}[img${i}]overlay=x=${x}:y=${y}:enable='${enable}':eof_action=repeat[base${i + 1}]`);
+    base = `[base${i + 1}]`;
+  });
+  f.push(`${base}ass=filename='${assArg}':fontsdir='${fontsArg}',setpts=PTS/${speed},format=yuv420p[vout]`);
   if (info.hasAudio) f.push(`[ac]volume=${volume.toFixed(3)},${atempoChain(speed)}[aout]`);
 
   const out = path.join(workDir, 'output.mp4');
@@ -101,6 +130,7 @@ export async function renderProject({ input, project, workDir, fontsDir, onProgr
   const args = [
     '-y', '-hide_banner', '-nostats', '-progress', 'pipe:1',
     '-i', input,
+    ...overlays.flatMap((o) => ['-i', o.file]),
     '-filter_complex', f.join(';'),
     '-map', '[vout]',
     ...(info.hasAudio ? ['-map', '[aout]', '-c:a', 'aac', '-b:a', '160k'] : []),

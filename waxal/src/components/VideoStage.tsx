@@ -18,24 +18,27 @@ type Props = {
   height: number;
   onTogglePlay: () => void;
   onEditText: (id: string) => void;
+  onEditCaption: (id: string) => void;
 };
 
-export function VideoStage({ player, width, height, onTogglePlay, onEditText }: Props) {
+export function VideoStage({ player, width, height, onTogglePlay, onEditText, onEditCaption }: Props) {
   const project = useEditor((s) => s.project)!;
   const playing = usePlayback((s) => s.playing);
 
   return (
     <View style={[styles.stage, { width, height }]}>
-      <VideoView
-        player={player}
-        // Explicit size: a web <video> ignores left/right/bottom and grows to the video's own size otherwise.
-        style={{ position: 'absolute', top: 0, left: 0, width, height }}
-        contentFit="contain"
-        nativeControls={false}
-        // iPhone Safari: play inside the page instead of jumping to fullscreen.
-        playsInline
-        surfaceType="textureView"
-      />
+      <View nativeID="waxal-main-video" pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height }}>
+        <VideoView
+          player={player}
+          // Explicit size: a web <video> ignores left/right/bottom and grows to the video's own size otherwise.
+          style={{ position: 'absolute', top: 0, left: 0, width, height }}
+          contentFit="contain"
+          nativeControls={false}
+          // iPhone Safari: play inside the page instead of jumping to fullscreen.
+          playsInline
+          surfaceType="textureView"
+        />
+      </View>
       <Pressable style={StyleSheet.absoluteFill} onPress={onTogglePlay}>
         {!playing ? (
           <View style={styles.playBadge}>
@@ -47,7 +50,17 @@ export function VideoStage({ player, width, height, onTogglePlay, onEditText }: 
         <ImageOverlayView key={o.id} overlay={o} width={width} height={height} />
       ))}
       <CaptionOverlay captions={project.captions} style={project.style} width={width} height={height} />
-      <CaptionDragBand width={width} height={height} onTap={onTogglePlay} />
+      <CaptionDragBand
+        width={width}
+        height={height}
+        onTap={() => {
+          // Playing: a tap pauses. Paused: a tap on the caption opens it for fixing words.
+          const st = usePlayback.getState();
+          const c = !st.playing ? useEditor.getState().project!.captions.find((x) => st.time >= x.start && st.time < x.end) : null;
+          if (c) onEditCaption(c.id);
+          else onTogglePlay();
+        }}
+      />
       {project.texts.map((t) => (
         <TextOverlayView key={t.id} overlay={t} width={width} height={height} onEdit={onEditText} />
       ))}

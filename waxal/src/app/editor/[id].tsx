@@ -7,6 +7,7 @@ import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, View, useWin
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CaptionsPanel, MagicPanel } from '@/components/panels/AIPanel';
+import { CaptionEditPanel } from '@/components/panels/CaptionEditPanel';
 import { SpeedPanel, VolumePanel } from '@/components/panels/AudioPanels';
 import { StylePanel } from '@/components/panels/StylePanel';
 import { TextPanel } from '@/components/panels/TextPanel';
@@ -25,7 +26,13 @@ import { usePlayback } from '@/store/playback';
 import { colors } from '@/theme';
 import type { Project } from '@/types';
 
-type Panel = 'captions' | 'magic' | 'style' | 'volume' | 'speed' | 'transcript' | { text: string } | null;
+/** Web: the main <video> element (VideoStage gives its wrapper this id). */
+function mainVideoElement(): HTMLVideoElement | null {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
+  return document.querySelector('#waxal-main-video video');
+}
+
+type Panel = 'captions' | 'magic' | 'style' | 'volume' | 'speed' | 'transcript' | { text: string } | { caption: string } | null;
 
 export default function EditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -147,11 +154,16 @@ function Editor({ videoUri }: { videoUri: string }) {
     const step = () => {
       const p = projectRef.current;
       const clips = p.clips;
+      // Web: read the <video> on screen directly; iPhone Safari can leave the player's own copy stale,
+      // which froze the clock (captions only refreshed when the screen was touched).
+      const el = mainVideoElement();
+      const playing = el ? !el.paused && !el.ended : player.playing;
+      if (el && usePlayback.getState().playing !== playing) usePlayback.getState().set({ playing });
       if (clips.length) {
         let idx = Math.min(clipIndex.current, clips.length - 1);
-        let t = player.currentTime;
+        let t = el ? el.currentTime : player.currentTime;
         const clip = clips[idx];
-        if (player.playing) {
+        if (playing) {
           if (t >= clip.end - 0.03) {
             if (idx + 1 < clips.length) {
               idx += 1;
@@ -190,6 +202,17 @@ function Editor({ videoUri }: { videoUri: string }) {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
+    // The video's own events also move the clock (they keep firing when animation frames are held back).
+    let hooked: HTMLVideoElement | null = null;
+    const onMedia = () => safeStep();
+    const MEDIA_EVENTS = ['timeupdate', 'seeked', 'play', 'playing', 'pause', 'ended'];
+    const hook = setInterval(() => {
+      const el = mainVideoElement();
+      if (!el || el === hooked) return;
+      MEDIA_EVENTS.forEach((ev) => hooked?.removeEventListener(ev, onMedia));
+      MEDIA_EVENTS.forEach((ev) => el.addEventListener(ev, onMedia));
+      hooked = el;
+    }, 500);
     // Backup clock: some phones pause animation frames (low power mode, video layers); keep time moving anyway.
     const backup = setInterval(() => {
       if (Date.now() - lastTick > 120) safeStep();
@@ -197,6 +220,8 @@ function Editor({ videoUri }: { videoUri: string }) {
     return () => {
       cancelAnimationFrame(raf);
       clearInterval(backup);
+      clearInterval(hook);
+      MEDIA_EVENTS.forEach((ev) => hooked?.removeEventListener(ev, onMedia));
     };
   }, [player]);
 
@@ -221,7 +246,8 @@ function Editor({ videoUri }: { videoUri: string }) {
   );
 
   const togglePlay = useCallback(() => {
-    if (player.playing) {
+    const el = mainVideoElement();
+    if (el ? !el.paused : player.playing) {
       player.pause();
       return;
     }
@@ -424,7 +450,7 @@ function Editor({ videoUri }: { videoUri: string }) {
       ];
     if (selection?.kind === 'caption')
       return [
-        { key: 'edit', icon: 'create-outline', label: 'Edit', onPress: () => setPanel('transcript') },
+        { key: 'edit', icon: 'create-outline', label: 'Fix words', onPress: () => setPanel({ caption: selection.id }) },
         { key: 'split', icon: 'cut', label: 'Split', onPress: split },
         { key: 'merge', icon: 'git-merge-outline', label: 'Merge next', onPress: mergeNext },
         { key: 'style', icon: 'color-palette', label: 'Style', onPress: () => setPanel('style') },
@@ -503,7 +529,7 @@ function Editor({ videoUri }: { videoUri: string }) {
 
       {/* video */}
       <Pressable style={styles.stageArea} onPress={() => select(null)} onLayout={(e) => setArea({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-        {area.w > 0 && stageW > 0 ? <VideoStage player={player} width={stageW} height={stageH} onTogglePlay={togglePlay} onEditText={(tid) => setPanel({ text: tid })} /> : null}
+        {area.w > 0 && stageW > 0 ? <VideoStage player={player} width={stageW} height={stageH} onTogglePlay={togglePlay} onEditText={(tid) => setPanel({ text: tid })} onEditCaption={(cid) => setPanel({ caption: cid })} /> : null}
       </Pressable>
 
       <PlayBar onToggle={togglePlay} onSeek={seekTimeline} />
@@ -521,13 +547,14 @@ function Editor({ videoUri }: { videoUri: string }) {
         <Toolbar tools={tools} onBack={selection ? () => select(null) : undefined} title={selection ? (selection.kind === 'image' ? 'overlay' : selection.kind) : undefined} />
       </View>
 
+      {panel && typeof panel === 'object' && 'caption' in panel ? <CaptionEditPanel captionId={panel.caption} onClose={closePanel} onSeekSource={seekSource} /> : null}
       {panel === 'captions' ? <CaptionsPanel onClose={closePanel} /> : null}
       {panel === 'magic' ? <MagicPanel onClose={closePanel} /> : null}
       {panel === 'style' ? <StylePanel onClose={closePanel} /> : null}
       {panel === 'volume' ? <VolumePanel onClose={closePanel} /> : null}
       {panel === 'speed' ? <SpeedPanel onClose={closePanel} /> : null}
       {panel === 'transcript' ? <TranscriptPanel onClose={closePanel} onSeekSource={seekSource} /> : null}
-      {panel && typeof panel === 'object' ? <TextPanel id={panel.text} onClose={closePanel} /> : null}
+      {panel && typeof panel === 'object' && 'text' in panel ? <TextPanel id={panel.text} onClose={closePanel} /> : null}
       <ToastHost />
     </View>
   );

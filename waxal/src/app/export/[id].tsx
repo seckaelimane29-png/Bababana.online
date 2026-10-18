@@ -131,6 +131,7 @@ export default function ExportScreen() {
           <Stat icon="chatbox-ellipses-outline" label="Captions" value={`${project.captions.length}`} />
           <Stat icon="text-outline" label="Texts" value={`${project.texts.length}`} />
           <Stat icon="cut-outline" label="Clips" value={`${project.clips.length}`} />
+          <Stat icon="images-outline" label="Overlays" value={`${project.images?.length ?? 0}`} />
         </View>
 
         <Section title="Video">

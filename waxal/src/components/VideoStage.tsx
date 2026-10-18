@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { VideoView, type VideoPlayer } from 'expo-video';
-import { useRef, useState } from 'react';
+import { VideoView, useVideoPlayer, type VideoPlayer } from 'expo-video';
+import { useEffect, useRef, useState } from 'react';
 import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CaptionOverlay } from '@/components/CaptionOverlay';
@@ -217,30 +217,92 @@ function ImageOverlayView({ overlay, width, height }: { overlay: ImageOverlay; w
     }),
   ).current;
 
-  if (!visible && !selected) return null;
+  const isVideo = overlay.kind === 'video';
+  // Video overlays stay mounted (hidden) so their player isn't rebuilt every time they come on screen.
+  if (!visible && !selected && !isVideo) return null;
+  const hidden = !visible && !selected;
   const w = overlay.w * width;
   const h = w * overlay.aspect;
   return (
     <View
       {...mover.panHandlers}
+      pointerEvents={hidden ? 'none' : 'auto'}
       style={{
         position: 'absolute',
         left: overlay.x * width - w / 2,
         top: overlay.y * height - h / 2,
         width: w,
         height: h,
-        opacity: visible ? 1 : 0.45,
+        opacity: hidden ? 0 : visible ? 1 : 0.45,
         borderWidth: selected ? 1.5 : 0,
         borderColor: colors.lime,
         borderStyle: 'dashed',
       }}
     >
-      <Image source={{ uri: overlay.uri }} style={{ width: '100%', height: '100%' }} contentFit="fill" />
+      {isVideo ? (
+        <OverlayVideo overlay={overlay} width={w} height={h} />
+      ) : (
+        <Image source={{ uri: overlay.uri }} style={{ width: '100%', height: '100%' }} contentFit="fill" />
+      )}
       {selected ? (
         <View {...resizer.panHandlers} hitSlop={12} style={styles.resizeHandle}>
           <Ionicons name="resize" size={14} color="#0B0B10" />
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/** The second video's own player, kept in step with the main video's clock. */
+function OverlayVideo({ overlay, width, height }: { overlay: ImageOverlay; width: number; height: number }) {
+  const player = useVideoPlayer(overlay.uri, (p) => {
+    p.loop = false;
+    p.muted = true;
+  });
+  const speed = useEditor((s) => s.project!.speed);
+  const ref = useRef(overlay);
+  ref.current = overlay;
+
+  useEffect(() => {
+    player.muted = !overlay.sound;
+  }, [player, overlay.sound]);
+  useEffect(() => {
+    player.playbackRate = speed;
+  }, [player, speed]);
+
+  useEffect(() => {
+    const sync = (st: { time: number; playing: boolean }) => {
+      try {
+        const o = ref.current;
+        const inside = st.time >= o.start && st.time < o.end;
+        if (!inside) {
+          if (player.playing) player.pause();
+          return;
+        }
+        const target = (o.srcStart ?? 0) + (st.time - o.start);
+        if (st.playing) {
+          if (Math.abs(player.currentTime - target) > 0.35) player.currentTime = target;
+          if (!player.playing) player.play();
+        } else {
+          if (player.playing) player.pause();
+          if (Math.abs(player.currentTime - target) > 0.05) player.currentTime = target;
+        }
+      } catch {}
+    };
+    sync(usePlayback.getState());
+    return usePlayback.subscribe(sync);
+  }, [player]);
+
+  return (
+    <View pointerEvents="none" style={{ width, height }}>
+      <VideoView
+        player={player}
+        style={{ position: 'absolute', top: 0, left: 0, width, height }}
+        contentFit="fill"
+        nativeControls={false}
+        playsInline
+        surfaceType="textureView"
+      />
     </View>
   );
 }

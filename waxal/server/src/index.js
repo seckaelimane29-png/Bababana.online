@@ -3,7 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { appendFile, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { appendFile, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
@@ -245,6 +245,7 @@ async function pump() {
     console.error(`[render ${job.id}]`, job.error);
   } finally {
     rm(job.input, { force: true }).catch(() => {});
+    for (const f of job.extras || []) rm(f, { force: true }).catch(() => {});
     running = false;
     pump();
   }
@@ -273,6 +274,22 @@ app.post('/upload/:id/chunk', express.raw({ type: () => true, limit: '12mb' }), 
   }
 });
 
+// Phones send overlay videos as one multipart file; the browser uses the chunked endpoint above.
+app.post('/upload/:id/file', upload.single('file'), async (req, res) => {
+  const { id } = req.params;
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!/^[a-zA-Z0-9-]{8,64}$/.test(id)) {
+    rm(req.file.path, { force: true }).catch(() => {});
+    return res.status(400).json({ error: 'Bad upload id' });
+  }
+  try {
+    await rename(req.file.path, chunkPath(id));
+    res.json({ size: req.file.size });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
 app.post('/render', rateLimit, upload.single('file'), useChunkedUpload, (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
   let project;
@@ -285,7 +302,16 @@ app.post('/render', rateLimit, upload.single('file'), useChunkedUpload, (req, re
   const id = randomUUID();
   const dir = path.join(JOBS, id);
   mkdirSync(dir, { recursive: true });
-  const job = { id, state: 'queued', progress: 0, dir, input: req.file.path, project, created: Date.now() };
+  // Overlay videos were uploaded beforehand and are referenced by uploadId.
+  const extras = [];
+  project.images = (Array.isArray(project.images) ? project.images : []).flatMap((o) => {
+    if (o?.kind !== 'video') return [o];
+    const uid = String(o.uploadId || '');
+    if (!/^[a-zA-Z0-9-]{8,64}$/.test(uid) || !existsSync(chunkPath(uid))) return [];
+    extras.push(chunkPath(uid));
+    return [{ ...o, file: chunkPath(uid) }];
+  });
+  const job = { id, state: 'queued', progress: 0, dir, input: req.file.path, extras, project, created: Date.now() };
   jobs.set(id, job);
   queue.push(job);
   pump();

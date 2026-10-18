@@ -47,7 +47,17 @@ async function persistIndex(list: ProjectSummary[]) {
 
 export async function loadProject(id: string): Promise<Project | null> {
   const raw = await AsyncStorage.getItem(projectKey(id));
-  return raw ? (JSON.parse(raw) as Project) : null;
+  if (!raw) return null;
+  let p = JSON.parse(raw) as Project;
+  if (Platform.OS === 'web') {
+    // blob: URLs die with the tab; the browser keeps the files themselves (main video by project id,
+    // overlay videos by overlay id), so hand out fresh URLs.
+    const url = await videoUrl(id);
+    if (url) p = { ...p, videoUri: url };
+    const images = await Promise.all((p.images ?? []).map(async (o) => (o.kind === 'video' ? { ...o, uri: (await videoUrl(o.id)) ?? o.uri } : o)));
+    p = { ...p, images };
+  }
+  return p;
 }
 
 async function saveProject(p: Project) {
@@ -168,11 +178,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   future: [],
   selection: null,
   open: async (id) => {
-    let p = await loadProject(id);
-    if (p && Platform.OS === 'web') {
-      const url = await videoUrl(id);
-      if (url) p = { ...p, videoUri: url };
-    }
+    const p = await loadProject(id);
     set({ project: p, past: [], future: [], selection: null });
     return !!p;
   },

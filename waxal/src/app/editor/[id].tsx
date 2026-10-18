@@ -17,7 +17,7 @@ import { Toolbar, type Tool } from '@/components/Toolbar';
 import { IconButton, T } from '@/components/ui';
 import { VideoStage } from '@/components/VideoStage';
 import { splitCaptionAt } from '@/lib/captions';
-import { pickOverlayImage } from '@/lib/images';
+import { pickOverlay, type PickedOverlay } from '@/lib/images';
 import { uid } from '@/lib/id';
 import { clipOffsets, sourceToTimeline, timelineDuration, timelineToSource } from '@/lib/timeline';
 import { useEditor } from '@/store/projects';
@@ -308,11 +308,11 @@ function Editor({ videoUri }: { videoUri: string }) {
 
   const addOverlay = async () => {
     const id = uid('i');
-    let picked: { uri: string; aspect: number } | null = null;
+    let picked: PickedOverlay | null = null;
     try {
-      picked = await pickOverlayImage(id);
+      picked = await pickOverlay(id);
     } catch (e) {
-      return toast(`Couldn't open the picture: ${e instanceof Error ? e.message : String(e)}`);
+      return toast(`Couldn't open that file: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!picked) return;
     const { time, timelineTime } = playhead();
@@ -322,10 +322,32 @@ function Editor({ videoUri }: { videoUri: string }) {
     const frameAspect = p.height / p.width;
     // Start at half the frame width, smaller if the picture is tall.
     const w = Math.min(0.5, (0.5 * frameAspect) / picked.aspect);
-    const o = { id, uri: picked.uri, aspect: picked.aspect, start: time, end: Math.min(time + 4, Math.max(clipEnd, time + 0.5)), x: 0.5, y: 0.4, w };
+    // Pictures show for 4 s; a video overlay runs for its own length (up to the end of the main video).
+    const length = picked.kind === 'video' && picked.duration ? picked.duration : 4;
+    const end = picked.kind === 'video' ? Math.min(time + length, p.duration) : Math.min(time + length, Math.max(clipEnd, time + 0.5));
+    const o = {
+      id,
+      kind: picked.kind,
+      uri: picked.uri,
+      aspect: picked.aspect,
+      start: time,
+      end: Math.max(end, time + 0.5),
+      x: 0.5,
+      y: 0.4,
+      w,
+      ...(picked.kind === 'video' ? { srcStart: 0, mediaDuration: picked.duration, sound: false } : {}),
+    };
     update((x) => ({ ...x, images: [...(x.images ?? []), o] }));
     select({ kind: 'image', id });
     toast('Drag to move · corner to resize');
+  };
+
+  const toggleOverlaySound = () => {
+    if (selection?.kind !== 'image') return;
+    const o = (project.images ?? []).find((x) => x.id === selection.id);
+    if (!o) return;
+    update((p) => ({ ...p, images: (p.images ?? []).map((x) => (x.id === o.id ? { ...x, sound: !x.sound } : x)) }));
+    toast(o.sound ? 'Overlay sound off' : 'Overlay sound on');
   };
 
   /** Make the selected picture start or stop at the playhead. */
@@ -419,6 +441,16 @@ function Editor({ videoUri }: { videoUri: string }) {
       return [
         { key: 'start', icon: 'play-skip-back-outline', label: 'Start here', onPress: () => setImageEdge('start') },
         { key: 'end', icon: 'play-skip-forward-outline', label: 'End here', onPress: () => setImageEdge('end') },
+        ...((project.images ?? []).find((x) => x.id === selection.id)?.kind === 'video'
+          ? [
+              {
+                key: 'sound',
+                icon: (project.images ?? []).find((x) => x.id === selection.id)?.sound ? 'volume-high' : 'volume-mute',
+                label: (project.images ?? []).find((x) => x.id === selection.id)?.sound ? 'Sound on' : 'Sound off',
+                onPress: toggleOverlaySound,
+              } as Tool,
+            ]
+          : []),
         { key: 'add', icon: 'image-outline', label: 'Add another', onPress: addOverlay },
         { key: 'dup', icon: 'copy-outline', label: 'Duplicate', onPress: duplicate },
         { key: 'del', icon: 'trash', label: 'Delete', onPress: remove, danger: true },

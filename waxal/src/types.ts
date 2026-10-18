@@ -69,11 +69,18 @@ export type TextOverlay = {
   strokeColor: string | null;
 };
 
-/** A picture (photo, logo, sticker) shown on top of the video. */
+/** A picture (photo, logo, sticker) or a second video shown on top of the main video. */
 export type ImageOverlay = {
   id: string;
-  /** data: URL on web, local file URI on phones. */
+  /** Missing on older projects, which only had pictures. */
+  kind?: 'image' | 'video';
+  /** Pictures: data: URL on web, local file URI on phones. Videos: blob: URL on web (re-made on open), file URI on phones. */
   uri: string;
+  /** Video overlays: where in the overlay video playback begins, and its own length (seconds). */
+  srcStart?: number;
+  mediaDuration?: number;
+  /** Video overlays: mix the overlay's own sound in. */
+  sound?: boolean;
   start: number;
   end: number;
   /** Center position, fractions of the video frame. */

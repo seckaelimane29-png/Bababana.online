@@ -93,7 +93,7 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
   const imageBlocks = useMemo(
     () =>
       (project.images ?? []).flatMap((o) =>
-        sourceRangeToTimeline(project.clips, o.start, o.end).map((r, i) => ({ key: `${o.id}-${i}`, id: o.id, start: r.start, end: r.end, uri: o.uri })),
+        sourceRangeToTimeline(project.clips, o.start, o.end).map((r, i) => ({ key: `${o.id}-${i}`, id: o.id, start: r.start, end: r.end, uri: o.uri, video: o.kind === 'video' })),
       ),
     [project.images, project.clips],
   );
@@ -223,9 +223,13 @@ export function Timeline({ width, thumbnails, onSeek, onScrubStart }: Props) {
                       }}
                       style={[styles.block, { left: b.start * pps, width: Math.max((b.end - b.start) * pps - 2, 3), backgroundColor: sel ? '#1F8A70' : '#15463A' }, sel && styles.selected]}
                     >
-                      <Image source={{ uri: b.uri }} style={{ width: 18, height: 18, borderRadius: 3 }} contentFit="cover" />
+                      {b.video ? (
+                        <Ionicons name="videocam" size={12} color="#fff" />
+                      ) : (
+                        <Image source={{ uri: b.uri }} style={{ width: 18, height: 18, borderRadius: 3 }} contentFit="cover" />
+                      )}
                       <T numberOfLines={1} weight="semibold" style={{ fontSize: 10, color: '#fff', flexShrink: 1 }}>
-                        Overlay
+                        {b.video ? 'Video overlay' : 'Overlay'}
                       </T>
                     </Pressable>
                   );

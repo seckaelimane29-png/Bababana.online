@@ -11,9 +11,39 @@ export type RenderStage = { stage: 'upload' | 'render' | 'download' | 'done'; pr
 
 export type RenderOptions = { quality: '720' | '1080' | 'source'; burnCaptions: boolean };
 
-async function payload(p: Project, opts: RenderOptions) {
+/** Sends each overlay video to the server ahead of the render; returns overlay id → upload id. */
+async function uploadOverlayVideos(p: Project, base: string, onProgress: (f: number) => void): Promise<Record<string, string>> {
+  const videos = (p.images ?? []).filter((o) => o.kind === 'video');
+  const ids: Record<string, string> = {};
+  for (const [i, o] of videos.entries()) {
+    const step = (f: number) => onProgress((i + f) / videos.length);
+    if (Platform.OS === 'web') {
+      const blob = await (await fetch(o.uri)).blob();
+      ids[o.id] = await uploadInChunks(base, blob, serverHeaders(), step);
+    } else {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const res = await new File(o.uri).upload(`${base}/upload/${id}/file`, {
+        httpMethod: 'POST',
+        uploadType: UploadType.MULTIPART,
+        fieldName: 'file',
+        mimeType: 'video/mp4',
+        headers: serverHeaders(),
+        onProgress: (d) => d.totalBytes && step(d.bytesSent / d.totalBytes),
+      });
+      if (res.status >= 400) throw new Error(`Overlay upload failed (${res.status})`);
+      ids[o.id] = id;
+    }
+  }
+  return ids;
+}
+
+async function payload(p: Project, opts: RenderOptions, uploads: Record<string, string>) {
   const images = await Promise.all(
-    (p.images ?? []).map(async (o) => ({ start: o.start, end: o.end, x: o.x, y: o.y, w: o.w, aspect: o.aspect, data: await imageDataUrl(o.uri) })),
+    (p.images ?? []).map(async (o) => {
+      const common = { start: o.start, end: o.end, x: o.x, y: o.y, w: o.w, aspect: o.aspect };
+      if (o.kind === 'video') return { ...common, kind: 'video', srcStart: o.srcStart ?? 0, sound: !!o.sound, uploadId: uploads[o.id] };
+      return { ...common, kind: 'image', data: await imageDataUrl(o.uri) };
+    }),
   );
   return JSON.stringify({
     width: p.width,
@@ -38,18 +68,27 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
   if (!base) throw new Error('Add your Waxal server URL in Settings to export videos with burned-in captions.');
 
   onStage({ stage: 'upload', progress: 0 });
+  let uploads: Record<string, string>;
+  try {
+    // Overlay videos go first and count for the first fifth of the upload bar.
+    uploads = await uploadOverlayVideos(p, base, (f) => onStage({ stage: 'upload', progress: f * 0.2 }));
+  } catch {
+    throw new Error("Couldn't upload the overlay video. Check your internet connection and try again.");
+  }
+  const hasOverlayVideos = Object.keys(uploads).length > 0;
+  const mainProgress = (f: number) => (hasOverlayVideos ? 0.2 + f * 0.8 : f);
   let job: { id: string };
   if (Platform.OS === 'web') {
     const blob = await (await fetch(p.videoUri)).blob();
     let uploadId: string;
     try {
-      uploadId = await uploadInChunks(base, blob, serverHeaders(), (progress) => onStage({ stage: 'upload', progress }));
+      uploadId = await uploadInChunks(base, blob, serverHeaders(), (progress) => onStage({ stage: 'upload', progress: mainProgress(progress) }));
     } catch {
       throw new Error("Couldn't upload the video. Check your internet connection and try again.");
     }
     const form = new FormData();
     form.append('uploadId', uploadId);
-    form.append('project', await payload(p, opts));
+    form.append('project', await payload(p, opts, uploads));
     const res = await fetch(`${base}/render`, { method: 'POST', body: form, headers: serverHeaders() });
     if (!res.ok) throw new Error(`Export failed (${res.status}): ${await res.text()}`);
     job = await res.json();
@@ -60,8 +99,8 @@ export async function renderVideo(p: Project, opts: RenderOptions, onStage: (s: 
       fieldName: 'file',
       mimeType: 'video/mp4',
       headers: serverHeaders(),
-      parameters: { project: await payload(p, opts) },
-      onProgress: (d) => d.totalBytes && onStage({ stage: 'upload', progress: d.bytesSent / d.totalBytes }),
+      parameters: { project: await payload(p, opts, uploads) },
+      onProgress: (d) => d.totalBytes && onStage({ stage: 'upload', progress: mainProgress(d.bytesSent / d.totalBytes) }),
     });
     if (res.status >= 400) throw new Error(`Upload failed (${res.status}): ${res.body.slice(0, 200)}`);
     job = JSON.parse(res.body);

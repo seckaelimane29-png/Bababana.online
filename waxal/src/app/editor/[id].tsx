@@ -19,6 +19,7 @@ import { IconButton, T } from '@/components/ui';
 import { VideoStage } from '@/components/VideoStage';
 import { splitCaptionAt } from '@/lib/captions';
 import { pickOverlay, type PickedOverlay } from '@/lib/images';
+import { webPrepareToPlay, webSeek } from '@/lib/webSeek';
 import { uid } from '@/lib/id';
 import { clipOffsets, sourceToTimeline, timelineDuration, timelineToSource } from '@/lib/timeline';
 import { useEditor } from '@/store/projects';
@@ -159,6 +160,8 @@ function Editor({ videoUri }: { videoUri: string }) {
       const el = mainVideoElement();
       const playing = el ? !el.paused && !el.ended : player.playing;
       if (el && usePlayback.getState().playing !== playing) usePlayback.getState().set({ playing });
+      // Paused on web: the playhead the user set is the truth (a seek may still be on its way to the video).
+      if (el && !playing) return;
       if (clips.length) {
         let idx = Math.min(clipIndex.current, clips.length - 1);
         let t = el ? el.currentTime : player.currentTime;
@@ -168,13 +171,15 @@ function Editor({ videoUri }: { videoUri: string }) {
             if (idx + 1 < clips.length) {
               idx += 1;
               t = clips[idx].start;
-              player.currentTime = t;
+              if (el) webSeek(el, t);
+              else player.currentTime = t;
             } else {
               player.pause();
               t = clip.end;
             }
           } else if (t < clip.start - 0.25) {
-            player.currentTime = clip.start;
+            if (el) webSeek(el, clip.start);
+            else player.currentTime = clip.start;
             t = clip.start;
           }
         }
@@ -231,7 +236,9 @@ function Editor({ videoUri }: { videoUri: string }) {
       if (!clips.length) return;
       const { index, source } = timelineToSource(clips, t);
       clipIndex.current = index;
-      player.currentTime = source;
+      const el = mainVideoElement();
+      if (el) webSeek(el, source);
+      else player.currentTime = source;
       usePlayback.getState().set({ time: source, timelineTime: t });
     },
     [player],
@@ -252,7 +259,13 @@ function Editor({ videoUri }: { videoUri: string }) {
       return;
     }
     const total = timelineDuration(projectRef.current.clips);
-    if (usePlayback.getState().timelineTime >= total - 0.05) seekTimeline(0);
+    if (usePlayback.getState().timelineTime >= total - 0.05 || el?.ended) seekTimeline(0);
+    if (el) {
+      // Start exactly where the playhead is, even if Safari dropped an earlier seek.
+      webPrepareToPlay(el, usePlayback.getState().time);
+      el.play().catch(() => {});
+      return;
+    }
     player.play();
   }, [player, seekTimeline]);
 

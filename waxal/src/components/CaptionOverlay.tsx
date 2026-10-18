@@ -21,9 +21,16 @@ function activeIndex(words: Word[], t: number): number {
 type Props = { captions: Caption[]; style: CaptionStyle; width: number; height: number; preview?: Caption | null };
 
 export function CaptionOverlay({ captions, style, width, height, preview }: Props) {
-  const time = usePlayback((s) => s.time);
-  const caption = preview ?? findCaption(captions, time);
-  const active = caption ? (preview ? Math.min(1, caption.words.length - 1) : activeIndex(caption.words, time)) : -1;
+  // Re-render only when the line or the highlighted word changes, not on every frame of playback
+  // (redrawing the captions 60 times a second made iPhone Safari stutter and blank the video).
+  const key = usePlayback((s) => {
+    if (preview) return '';
+    const c = findCaption(captions, s.time);
+    return c ? `${c.id}|${activeIndex(c.words, s.time)}` : '';
+  });
+  const [id, idx] = key.split('|');
+  const caption = preview ?? (id ? captions.find((c) => c.id === id) ?? null : null);
+  const active = caption ? (preview ? Math.min(1, caption.words.length - 1) : Number(idx)) : -1;
   if (!caption || !caption.words.length) return null;
   return <CaptionLine key={caption.id} caption={caption} active={active} style={style} width={width} height={height} />;
 }

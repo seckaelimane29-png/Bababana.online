@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import { uid } from '@/lib/id';
 import { serverBase, serverHeaders, useSettings } from '@/lib/settings';
-import { postForm, uploadInChunks } from '@/lib/webAudio';
+import { extractAudioWav, postForm, uploadInChunks } from '@/lib/webAudio';
 import type { Caption, Word } from '@/types';
 
 const OPENAI = 'https://api.openai.com/v1';
@@ -43,10 +43,12 @@ async function uploadVideo(
   if (Platform.OS === 'web') {
     const form = new FormData();
     Object.entries(params).forEach(([k, v]) => form.append(k, v));
-    if (toServer) {
-      // Send the whole video in small pieces and let the server pull the audio out with ffmpeg:
-      // the browser's audio decoder ignores the start trim of videos cut in the Photos app,
-      // which shifted every caption by the trimmed seconds.
+    // Fast path: send only the audio (a few hundred KB). Falls back to the whole video in small pieces,
+    // which the server reads with ffmpeg, when this browser can't decode the audio.
+    const audio = toServer ? await extractAudioWav(uri) : null;
+    if (audio) {
+      form.append('file', audio, 'audio.wav');
+    } else if (toServer) {
       const blob = await (await fetch(uri)).blob();
       try {
         form.append('uploadId', await uploadInChunks(url.replace(/\/transcribe.*$/, ''), blob, headers, onProgress));

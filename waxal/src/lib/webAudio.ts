@@ -30,23 +30,114 @@ function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
+type Trim = { delay: number; start: number; length: number };
+
+/**
+ * Reads the edit list of an MP4/MOV: videos trimmed in the iPhone Photos app keep the whole recording
+ * and only mark where playback starts. Returns that start (seconds into the audio) and the kept length.
+ */
+export async function readTrim(blob: Blob): Promise<Trim | null> {
+  const read = async (from: number, len: number) => new DataView(await blob.slice(from, from + len).arrayBuffer());
+  // Find the moov box at the top level (it can be at the start or the end of the file).
+  let pos = 0;
+  let moov: DataView | null = null;
+  while (pos + 8 <= blob.size) {
+    const h = await read(pos, 16);
+    let size = h.getUint32(0);
+    const type = String.fromCharCode(h.getUint8(4), h.getUint8(5), h.getUint8(6), h.getUint8(7));
+    let header = 8;
+    if (size === 1) {
+      size = Number(h.getBigUint64(8));
+      header = 16;
+    } else if (size === 0) size = blob.size - pos;
+    if (size < header) return null;
+    if (type === 'moov') {
+      moov = await read(pos + header, size - header);
+      break;
+    }
+    pos += size;
+  }
+  if (!moov) return null;
+  const v = moov;
+  type Box = { type: string; start: number; end: number };
+  const children = (start: number, end: number): Box[] => {
+    const out: Box[] = [];
+    let p = start;
+    while (p + 8 <= end) {
+      const size = v.getUint32(p);
+      const type = String.fromCharCode(v.getUint8(p + 4), v.getUint8(p + 5), v.getUint8(p + 6), v.getUint8(p + 7));
+      if (size < 8 || p + size > end) break;
+      out.push({ type, start: p + 8, end: p + size });
+      p += size;
+    }
+    return out;
+  };
+  const find = (boxes: Box[], type: string) => boxes.find((b) => b.type === type);
+  const timescale = (b: Box | undefined) => (b ? v.getUint32(b.start + (v.getUint8(b.start) === 1 ? 20 : 12)) : 0);
+  const top = children(0, v.byteLength);
+  const movieScale = timescale(find(top, 'mvhd'));
+  if (!movieScale) return null;
+  let best: Trim | null = null;
+  for (const trak of top.filter((b) => b.type === 'trak')) {
+    const tb = children(trak.start, trak.end);
+    const mdia = find(tb, 'mdia');
+    const edts = find(tb, 'edts');
+    if (!mdia || !edts) continue;
+    const mb = children(mdia.start, mdia.end);
+    const hdlr = find(mb, 'hdlr');
+    const kind = hdlr ? String.fromCharCode(v.getUint8(hdlr.start + 8), v.getUint8(hdlr.start + 9), v.getUint8(hdlr.start + 10), v.getUint8(hdlr.start + 11)) : '';
+    const mediaScale = timescale(find(mb, 'mdhd'));
+    const elst = find(children(edts.start, edts.end), 'elst');
+    if (!elst || !mediaScale || (kind !== 'soun' && kind !== 'vide')) continue;
+    const version = v.getUint8(elst.start);
+    const count = v.getUint32(elst.start + 4);
+    let p = elst.start + 8;
+    let delay = 0;
+    let trim: Trim | null = null;
+    for (let i = 0; i < count && p < elst.end; i++) {
+      const duration = version === 1 ? Number(v.getBigUint64(p)) : v.getUint32(p);
+      const mediaTime = version === 1 ? Number(v.getBigInt64(p + 8)) : v.getInt32(p + 4);
+      p += version === 1 ? 20 : 12;
+      if (mediaTime === -1) delay += duration / movieScale;
+      else {
+        trim = { delay, start: mediaTime / mediaScale, length: duration / movieScale };
+        break;
+      }
+    }
+    if (trim && (kind === 'soun' || !best)) best = trim;
+  }
+  return best;
+}
+
 /** Returns a 16 kHz mono WAV of the video's audio, or null if this browser can't decode it. */
 export async function extractAudioWav(uri: string): Promise<Blob | null> {
   try {
     const w = window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext };
     const Ctx = w.AudioContext ?? w.webkitAudioContext;
     if (!Ctx || typeof OfflineAudioContext === 'undefined') return null;
-    const data = await (await fetch(uri)).arrayBuffer();
+    const blob = await (await fetch(uri)).blob();
+    const trim = await readTrim(blob).catch(() => null);
+    const data = await blob.arrayBuffer();
     const ctx = new Ctx();
     // Callback form: older Safari doesn't return a promise from decodeAudioData.
     const decoded = await new Promise<AudioBuffer>((resolve, reject) => ctx.decodeAudioData(data, resolve, reject));
     ctx.close?.();
+    // The browser decodes the whole recording, ignoring a Photos trim: cut the audio to what the video plays,
+    // or every caption lands late by the trimmed seconds.
+    let delay = 0;
+    let start = 0;
+    let length = decoded.duration;
+    if (trim && trim.start > 0.05 && decoded.duration > trim.length + 0.25) {
+      delay = trim.delay;
+      start = Math.min(trim.start, decoded.duration);
+      length = Math.min(trim.length - trim.delay, decoded.duration - start);
+    }
     const rate = 16000;
-    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
+    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil((delay + length) * rate)), rate);
     const source = offline.createBufferSource();
     source.buffer = decoded;
     source.connect(offline.destination);
-    source.start();
+    source.start(delay, start, length);
     const rendered = await offline.startRendering();
     return encodeWav(rendered.getChannelData(0), rate);
   } catch {

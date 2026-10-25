@@ -1,8 +1,9 @@
 # PXE — Architecture & MVP Plan
 
-> Status: **proposal, stage 0**. Nothing here has been deployed. The SQL in
-> `../supabase/migrations/` is a reviewed draft and has not been applied to any
-> database. No payment or video provider has been integrated.
+> Status: **stage 1 done** (public pages using labeled demo data). Nothing
+> has been deployed. The SQL in `../supabase/migrations/` is a reviewed draft
+> and has not been applied to any database. No payment or video provider has
+> been integrated.
 
 PXE is a knowledge marketplace where creators in The Gambia and Senegal (and the
 diaspora) sell online courses: a public marketplace, plus a shareable storefront
@@ -38,11 +39,11 @@ What this means for PXE:
 
 | Concern | Choice | Why |
 |---|---|---|
-| App | **Next.js (App Router) + TypeScript** | Server Components and Route Handlers give a trusted server for webhooks and authorization. Deploys to Vercel like the rest of the repo. |
+| App | **Next.js 16 (App Router, Cache Components) + TypeScript** | Server Components and Route Handlers give a trusted server for webhooks and authorization. Deploys to Vercel like the rest of the repo. |
 | Styling | **Tailwind CSS** with design tokens (CSS variables) | Tokens defined once; small CSS bundle for low-bandwidth users. |
 | Database / Auth | **Supabase** (Postgres + Auth + RLS) | Already used in the repo. RLS adds a second layer of defense behind the server checks. |
 | Validation | **Zod** | One schema shared by forms and server actions. |
-| i18n | `next-intl` with message files `en.json`, `fr.json`, and `wo.json` (placeholder) | The Wolof file stays empty until a fluent speaker writes and reviews it. We never machine-translate. |
+| i18n | Next's built-in pattern: `app/[lang]` routes, typed dictionaries in `src/i18n/dictionaries/` read via `next/root-params` | A missing French key is a type error. Wolof gets added to `LOCALES` only once a fluent speaker has written `wo.ts`. We never machine-translate. |
 | Video | A `VideoProvider` interface, with the first adapter chosen in §6 | Keeps the codebase independent of any one vendor. |
 | Payments | A `PaymentProvider` interface, with the first adapter chosen in §5 | Lets us add or swap providers per market. |
 | Tests | Vitest (money, ledger, webhook idempotency, access rules) + Playwright (key user journeys) | Covers the critical business logic. |
@@ -146,7 +147,26 @@ browser.
 
 ## 5. Payments
 
-### 5.1 Provider research (preliminary, **unverified**)
+### 5.1 Provider shortlist (decision deferred)
+
+The owner hasn't chosen a provider yet. The current shortlist is
+**PayDunya, Modem Pay, PayTech, and Stripe**. All four are listed in
+`src/lib/payments/providers.ts` as `implemented: false`, which keeps checkout
+closed in the UI.
+
+To add one:
+1. write an adapter that implements `PaymentProvider`,
+2. register it,
+3. set its env vars,
+4. test it end to end against the provider's sandbox.
+
+Only after all four steps does checkout open for that provider's currencies.
+
+**Stripe caveat:** Stripe doesn't onboard merchants based in The Gambia or
+Senegal. Using it for EUR card payments needs a legal entity in a country
+Stripe supports, e.g. one owned by a diaspora founder in the EU or UK.
+
+### 5.1.1 Preliminary research (**unverified**)
 I did a quick web search. I haven't seen any official documentation or merchant
 contract, so treat everything below as leads to confirm.
 
@@ -276,8 +296,8 @@ can resume an upload instead of restarting it.
 
 | Stage | Deliverable |
 |---|---|
-| 0 (this) | Inspection, architecture, draft schema + RLS |
-| 1 | Next.js scaffold, design tokens and components, i18n (EN/FR), homepage, marketplace, course detail, and storefront pages using labeled demo data |
+| 0 ✅ | Inspection, architecture, draft schema + RLS |
+| 1 ✅ | Next.js scaffold, design tokens and components, i18n (EN/FR), homepage, marketplace, course detail, storefront, pricing, teach, and draft legal pages using labeled demo data; payment provider interface (no adapters yet) |
 | 2 | Supabase project, migrations applied, auth, roles, creator onboarding, course wizard (without video) |
 | 3 | Video adapter: direct upload, processing status, signed playback, course player, progress tracking |
 | 4 | Payment abstraction, sandbox adapter for the chosen provider, webhook, ledger, enrollment, plus tests for idempotency and access |

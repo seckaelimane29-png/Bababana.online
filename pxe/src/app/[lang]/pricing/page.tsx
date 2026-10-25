@@ -20,10 +20,10 @@ export default async function PricingPage() {
         {t.pricing.plans.map((plan) => (
           <section
             key={plan.name}
-            className={`card flex flex-col p-7 ${plan.highlighted ? 'border-primary ring-1 ring-primary' : ''}`}
+            className={`card flex flex-col p-7 ${plan.highlighted ? 'ring-2 ring-primary' : ''}`}
             aria-labelledby={`plan-${plan.name}`}
           >
-            <h2 id={`plan-${plan.name}`} className="font-display text-2xl font-semibold">{plan.name}</h2>
+            <h2 id={`plan-${plan.name}`} className="text-2xl font-bold tracking-[-0.02em]">{plan.name}</h2>
             <p className="mt-1 text-sm text-muted">{plan.blurb}</p>
             <p className="mt-6 text-3xl font-semibold">
               {plan.price ?? <span className="text-xl text-subtle">{t.pricing.tbd}</span>}

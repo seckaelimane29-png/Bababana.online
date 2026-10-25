@@ -49,7 +49,7 @@ export default async function TeachPage() {
         <ol className="mt-6 grid gap-6 md:grid-cols-3">
           {t.home.how.steps.map((step, i) => (
             <li key={step.title} className="card p-6">
-              <span className="font-display text-3xl text-primary">{i + 1}</span>
+              <span className="text-3xl font-bold text-primary">{i + 1}</span>
               <h3 className="mt-2 font-semibold">{step.title}</h3>
               <p className="mt-2 text-sm text-muted">{step.body}</p>
             </li>

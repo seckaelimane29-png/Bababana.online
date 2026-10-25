@@ -23,13 +23,13 @@ export default async function HomePage() {
         <div className="container-page grid grid-cols-1 items-center gap-12 py-14 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
           <div>
             <p className="eyebrow">{t.home.eyebrow}</p>
-            <h1 className="heading-display mt-4 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">{t.home.title}</h1>
-            <p className="mt-6 max-w-xl text-lg text-muted">{t.home.subtitle}</p>
+            <h1 className="heading-display mt-3 text-[42px] leading-[1.03] sm:text-6xl lg:text-[76px] lg:tracking-[-0.035em]">{t.home.title}</h1>
+            <p className="mt-6 max-w-xl text-[19px] leading-relaxed text-muted">{t.home.subtitle}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={`/${locale}/teach`} className="btn btn-primary px-6 text-base">
+              <Link href={`/${locale}/teach`} className="btn btn-primary min-h-12 px-7 text-base">
                 {t.cta.startTeaching}
               </Link>
-              <Link href={`/${locale}/courses`} className="btn btn-secondary px-6 text-base">
+              <Link href={`/${locale}/courses`} className="btn btn-secondary min-h-12 px-7 text-base">
                 {t.cta.exploreCourses}
               </Link>
             </div>
@@ -62,7 +62,7 @@ export default async function HomePage() {
             <li key={cat.slug}>
               <Link
                 href={`/${locale}/courses?category=${cat.slug}`}
-                className="card flex min-h-16 items-center px-4 py-3 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
+                className="card flex min-h-16 items-center px-4 py-3 text-sm font-medium transition-[box-shadow,color] duration-300 hover:text-primary hover:shadow-lift"
               >
                 {cat.name[locale]}
               </Link>
@@ -72,13 +72,13 @@ export default async function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="mt-12 bg-primary py-16 text-on-primary">
+      <section className="mt-12 bg-primary py-20 text-on-primary">
         <div className="container-page">
-          <h2 className="font-display text-3xl font-semibold">{t.home.how.title}</h2>
+          <h2 className="text-[34px] font-bold tracking-[-0.025em]">{t.home.how.title}</h2>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
             {t.home.how.steps.map((step, i) => (
               <li key={step.title}>
-                <span className="grid size-10 place-items-center rounded-full border border-current/30 font-display text-lg">{i + 1}</span>
+                <span className="grid size-10 place-items-center rounded-full bg-white/12 text-lg font-semibold">{i + 1}</span>
                 <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
                 <p className="mt-2 text-sm opacity-85">{step.body}</p>
               </li>
@@ -133,11 +133,11 @@ export default async function HomePage() {
       {/* FAQ */}
       <section className="container-page py-16">
         <div className="mx-auto max-w-3xl">
-          <h2 className="heading-display text-center text-3xl">{t.home.faq.title}</h2>
-          <div className="mt-8 divide-y divide-line rounded-card border border-line bg-surface">
+          <h2 className="heading-display text-center text-[34px]">{t.home.faq.title}</h2>
+          <div className="card mt-8 divide-y divide-line">
             {t.home.faq.items.map((item) => (
               <details key={item.q} className="group px-5 py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
                   {item.q}
                   <span aria-hidden className="text-xl text-subtle transition-transform group-open:rotate-45">+</span>
                 </summary>
@@ -171,7 +171,7 @@ function StorefrontPreview({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <figure className="relative mx-auto w-full max-w-md" aria-label={t.home.previewLabel}>
       <div aria-hidden className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-primary-soft via-transparent to-accent-soft opacity-80 blur-2xl" />
-      <div className="card overflow-hidden shadow-lift">
+      <div className="card overflow-hidden rounded-[24px] shadow-lift">
         <div className="flex items-center gap-1.5 border-b border-line bg-sunk px-4 py-2.5">
           <span className="size-2.5 rounded-full bg-line" />
           <span className="size-2.5 rounded-full bg-line" />
@@ -182,7 +182,7 @@ function StorefrontPreview({ locale, t }: { locale: Locale; t: Dictionary }) {
           <div className="flex items-center gap-3">
             <Avatar creator={creator} size={52} />
             <div className="min-w-0">
-              <p className="font-display text-lg font-semibold">{creator.displayName}</p>
+              <p className="text-[17px] font-semibold tracking-[-0.01em]">{creator.displayName}</p>
               <p className="truncate text-xs text-muted">{creator.headline}</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ function StorefrontPreview({ locale, t }: { locale: Locale; t: Dictionary }) {
           </p>
           <ul className="mt-2 space-y-2.5">
             {items.map((c) => (
-              <li key={c.slug} className="flex items-center gap-3 rounded-xl border border-line p-2">
+              <li key={c.slug} className="flex items-center gap-3 rounded-2xl bg-sunk/70 p-2">
                 <CourseCover course={c} className="h-12 w-16 shrink-0 rounded-lg" />
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{c.title}</span>
                 <PriceTag course={c} locale={locale} t={t} />
@@ -199,7 +199,7 @@ function StorefrontPreview({ locale, t }: { locale: Locale; t: Dictionary }) {
             ))}
           </ul>
           <div className="mt-4 flex items-center justify-between">
-            <DemoBadge label={t.home.previewLabel} />
+            <DemoBadge label={t.home.previewLabel} variant="solid" />
             <span className="rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-on-primary">{t.home.previewShare}</span>
           </div>
         </div>

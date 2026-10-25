@@ -16,7 +16,7 @@
   --ivory-200: #f2ede1;
   --charcoal-900: #1e1e1c;
   --charcoal-600: #55534d;
-  --charcoal-400: #8a877e;
+  --charcoal-400: #6f6c63; /* 4.9:1 on ivory (WCAG AA) */
   --terracotta-600: #b2552f;
   --terracotta-500: #c2643b;
   --terracotta-100: #f6e4da;
@@ -30,7 +30,7 @@
   --ink: var(--charcoal-900);
   --muted: var(--charcoal-600);
   --subtle: var(--charcoal-400);
-  --line: #e4ddcd;
+  --line: rgb(30 30 28 / 0.09); /* hairline separators */
   --primary: var(--forest-800);
   --primary-hover: var(--forest-900);
   --on-primary: #ffffff;
@@ -79,13 +79,16 @@
   --color-highlight: var(--highlight);
   --color-highlight-soft: var(--highlight-soft);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  /* System fonts: SF Pro on Apple devices, Roboto on Android, Segoe on
+     Windows. Native feel and zero font downloads on slow connections. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --radius-card: 1rem;
+  --radius-card: 1.25rem;
   --radius-pill: 999px;
-  --shadow-card: 0 1px 2px rgb(30 30 28 / 0.04), 0 4px 16px -4px rgb(30 30 28 / 0.08);
-  --shadow-lift: 0 2px 4px rgb(30 30 28 / 0.05), 0 16px 32px -8px rgb(30 30 28 / 0.14);
+  --shadow-card: 0 0 0 0.5px rgb(30 30 28 / 0.06), 0 1px 2px rgb(30 30 28 / 0.04), 0 8px 24px -12px rgb(30 30 28 / 0.12);
+  --shadow-lift: 0 0 0 0.5px rgb(30 30 28 / 0.06), 0 2px 6px rgb(30 30 28 / 0.05), 0 20px 40px -16px rgb(30 30 28 / 0.2);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -98,6 +101,8 @@
     color: var(--ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    font-feature-settings: "kern", "liga";
+    letter-spacing: -0.006em;
   }
   :focus-visible {
     outline: 2px solid var(--focus);
@@ -115,36 +120,46 @@
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 text-[15px] font-semibold transition-[background-color,color,transform,box-shadow] duration-200 ease-(--ease-out) select-none active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
   }
   .btn-primary {
     @apply bg-primary text-on-primary hover:bg-primary-hover;
   }
   .btn-secondary {
-    @apply border border-line bg-surface text-ink hover:border-primary hover:text-primary;
+    @apply bg-ink/[0.05] text-ink hover:bg-ink/[0.08];
   }
   .btn-ghost {
     @apply text-ink hover:bg-sunk;
   }
   .card {
-    @apply rounded-card border border-line bg-surface shadow-card;
+    @apply rounded-card bg-surface shadow-card;
   }
   .eyebrow {
-    @apply text-xs font-semibold tracking-[0.14em] text-accent uppercase;
+    @apply text-[13px] font-semibold text-accent;
   }
   .heading-display {
-    @apply font-display font-semibold tracking-tight text-balance text-ink;
+    @apply font-display font-bold tracking-[-0.025em] text-balance text-ink;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded-pill border border-line bg-surface px-2.5 py-0.5 text-xs font-medium text-muted;
+    @apply inline-flex items-center gap-1 rounded-pill bg-ink/[0.05] px-2.5 py-0.5 text-xs font-medium text-muted;
   }
   .field-label {
     @apply mb-1 block text-xs font-semibold text-muted;
   }
   .field {
-    @apply min-h-11 w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink placeholder:text-subtle focus:border-primary focus:outline-none;
+    @apply min-h-11 w-full rounded-xl border-0 bg-ink/[0.05] px-3.5 text-[15px] text-ink placeholder:text-subtle focus:bg-surface focus:ring-2 focus:ring-primary focus:outline-none;
   }
   .link {
     @apply font-medium text-primary underline-offset-4 hover:underline;
+  }
+  /* Horizontal chip scroller (categories) with hidden scrollbar. */
+  .scroller {
+    @apply -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden;
+  }
+  .pill-link {
+    @apply inline-flex min-h-10 shrink-0 snap-start items-center rounded-pill bg-ink/[0.05] px-4 text-sm font-medium whitespace-nowrap text-ink transition-colors hover:bg-ink/[0.09];
+  }
+  .pill-link[aria-current="page"] {
+    @apply bg-ink text-canvas hover:bg-ink;
   }
 }

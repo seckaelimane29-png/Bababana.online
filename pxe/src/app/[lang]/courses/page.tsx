@@ -18,7 +18,7 @@ export default async function CoursesPage({ searchParams }: PageProps<'/[lang]/c
   return (
     <div className="container-page py-10 sm:py-14">
       <header className="mb-8">
-        <h1 className="heading-display text-3xl sm:text-4xl">{t.market.title}</h1>
+        <h1 className="heading-display text-[34px] sm:text-5xl">{t.market.title}</h1>
         <p className="mt-2 text-muted">{t.market.subtitle}</p>
       </header>
       <Suspense fallback={<CourseGridSkeleton label={t.market.loading} />}>
@@ -39,8 +39,30 @@ async function Results({ searchParams }: { searchParams: PageProps<'/[lang]/cour
   ]);
   const active = Object.values(filters).some(Boolean);
 
+  /** Same filters with some values replaced — keeps chip links shareable. */
+  function hrefWith(patch: Partial<CourseFilters>) {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries({ ...filters, ...patch })) if (v) params.set(k, String(v));
+    const qs = params.toString();
+    return `/${locale}/courses${qs ? `?${qs}` : ''}`;
+  }
+
   return (
     <>
+      <nav aria-label={t.market.category} className="scroller mb-4">
+        {[{ slug: undefined, label: t.market.allCategories }, ...categories.map((c) => ({ slug: c.slug, label: c.name[locale] }))].map(
+          ({ slug, label }) => (
+            <Link
+              key={slug ?? 'all'}
+              href={hrefWith({ category: slug })}
+              aria-current={filters.category === slug ? 'page' : undefined}
+              className="pill-link"
+            >
+              {label}
+            </Link>
+          ),
+        )}
+      </nav>
       <FilterForm filters={filters} categories={categories} />
       <div className="mb-4 flex items-center justify-between text-sm text-muted" aria-live="polite">
         <span>{t.market.results(courses.length)}</span>
@@ -82,7 +104,7 @@ async function Results({ searchParams }: { searchParams: PageProps<'/[lang]/cour
       </div>
     );
     return (
-      <form action={`/${locale}/courses`} method="get" role="search" className="card mb-8 p-4 sm:p-5">
+      <form action={`/${locale}/courses`} method="get" role="search" className="mb-6">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="flex-1">
             <label htmlFor="f-q" className="sr-only">{t.market.search}</label>
